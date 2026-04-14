@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'core/theme/app_theme.dart';
-import 'routes/route_names.dart';
-import 'routes/app_routes.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() {
   runApp(const MotoCheckApp());
@@ -15,9 +13,24 @@ class MotoCheckApp extends StatelessWidget {
     return MaterialApp(
       title: 'MotoCheck',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialRoute: RouteNames.intro1,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+        fontFamily: 'Inter', // Make sure you add Inter font or remove this line
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.black,
+          primary: Colors.black,
+          secondary: Colors.black,
+          surface: Colors.white,
+          onSurface: Colors.black,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+        ),
+      ),
+      home: const OnboardingScreen(),
     );
   }
 }

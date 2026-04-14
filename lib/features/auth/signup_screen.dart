@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'widgets/auth_input_field.dart';
-import '../../shared/widgets/app_button.dart';
 import '../../routes/route_names.dart';
 
 class SignupScreen extends StatelessWidget {
@@ -9,86 +7,118 @@ class SignupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Create Account',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 16),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: Colors.black),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
               const Text(
-                'Join MotoCheck for a safer ride',
-                style: TextStyle(color: Colors.grey),
+                'Sign Up',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildInputField(
+                icon: Icons.person_outline,
+                hint: 'Name',
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                icon: Icons.email_outlined,
+                hint: 'Email',
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                icon: Icons.lock_outline,
+                hint: 'Password',
+                suffix: const Icon(Icons.visibility_off_outlined, color: Colors.black38, size: 20),
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                icon: Icons.lock_outline,
+                hint: 'Confirm Password',
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => Navigator.pushReplacementNamed(context, RouteNames.home),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'By signing up, you agree to our Terms of Service and Privacy Policy.',
+                style: TextStyle(color: Colors.black54, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              const AuthInputField(
-                label: 'Full Name',
-                hint: 'Enter your full name',
-                icon: Icons.person_outline,
-              ),
-              const SizedBox(height: 16),
-              const AuthInputField(
-                label: 'Email',
-                hint: 'Enter your email',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              const AuthInputField(
-                label: 'Password',
-                hint: 'Create a password',
-                icon: Icons.lock_outline,
-                isPassword: true,
-              ),
-              const SizedBox(height: 16),
-              const AuthInputField(
-                label: 'Confirm Password',
-                hint: 'Confirm your password',
-                icon: Icons.lock_outline,
-                isPassword: true,
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('Already have an account? ', style: TextStyle(color: Colors.black54)),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacementNamed(context, RouteNames.login);
+                      },
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
-              AppButton(
-                text: 'Sign Up',
-                onPressed: () {
-                  // After signup, navigate to home
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    RouteNames.home,
-                    (route) => false,
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Already have an account? "),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Login'),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required IconData icon,
+    required String hint,
+    Widget? suffix,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F7F7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black45, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          if (suffix != null) suffix,
+        ],
       ),
     );
   }

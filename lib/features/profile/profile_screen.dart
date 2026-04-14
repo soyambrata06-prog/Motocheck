@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../routes/route_names.dart';
+import '../../screens/welcome_screen.dart';
 import 'widgets/settings_tile.dart';
 import 'widgets/mode_switch.dart';
 import 'widgets/saved_bikes.dart';
@@ -29,9 +29,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pushNamedAndRemoveUntil(
+              Navigator.pushAndRemoveUntil(
                 context,
-                RouteNames.authChoice,
+                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
                 (route) => false,
               );
             },
@@ -109,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'John Doe',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  Text('john.doe@example.com', style: TextStyle(color: Colors.grey)),
+                  const Text('john.doe@example.com', style: TextStyle(color: Colors.black54)),
                 ],
               ),
             ),

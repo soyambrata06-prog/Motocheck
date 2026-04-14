@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'widgets/auth_button.dart';
 import '../../routes/route_names.dart';
 
 class AuthChoiceScreen extends StatelessWidget {
@@ -8,69 +7,128 @@ class AuthChoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
-                Icons.motorcycle,
-                size: 80,
-                color: Colors.blue,
+              const Spacer(flex: 2),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.shield_outlined, size: 60, color: Colors.black),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'MotoCheck',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Spacer(flex: 2),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, RouteNames.login),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => Navigator.pushNamed(context, RouteNames.signup),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  side: const BorderSide(color: Colors.black, width: 1.5),
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'MotoCheck',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Your ultimate motorcycle companion',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 60),
-              AuthButton(
-                text: 'Sign In',
-                onPressed: () {
-                  Navigator.pushNamed(context, RouteNames.login);
-                },
-              ),
-              const SizedBox(height: 16),
-              AuthButton(
-                text: 'Create Account',
-                onPressed: () {
-                  Navigator.pushNamed(context, RouteNames.signup);
-                },
-                isOutline: true,
-              ),
-              const SizedBox(height: 40),
-              const Row(
+              Row(
                 children: [
-                  Expanded(child: Divider()),
-                  Padding(
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                  const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('OR', style: TextStyle(color: Colors.grey)),
+                    child: Text('OR', style: TextStyle(color: Colors.black38, fontWeight: FontWeight.bold)),
                   ),
-                  Expanded(child: Divider()),
+                  Expanded(child: Divider(color: Colors.grey[300])),
                 ],
               ),
               const SizedBox(height: 24),
-              TextButton(
+              ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, RouteNames.home);
+                  // Social login logic
                 },
-                child: const Text('Continue as Guest'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/google.png',
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Sign in with Google', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Social login logic
+                },
+                icon: const Icon(Icons.apple, size: 24, color: Colors.white),
+                label: const Text('Sign in with Apple'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+              const SizedBox(height: 32),
             ],
           ),
         ),

@@ -17,7 +17,7 @@ class SosButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.4),
+              color: Colors.red.withValues(alpha: 0.4),
               spreadRadius: 10,
               blurRadius: 20,
             ),
