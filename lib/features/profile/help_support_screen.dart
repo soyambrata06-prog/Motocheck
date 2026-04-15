@@ -7,7 +7,7 @@ class HelpSupportScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -31,6 +31,7 @@ class HelpSupportScreen extends StatelessWidget {
               'Our team is here to help you 24/7',
               Icons.headset_mic_outlined,
               isDark,
+              const Color(0xFF448AFF), // Blue
             ),
             const SizedBox(height: 20),
             _buildSupportCard(
@@ -39,6 +40,7 @@ class HelpSupportScreen extends StatelessWidget {
               'Find answers to common questions',
               Icons.question_answer_outlined,
               isDark,
+              const Color(0xFFFFAB40), // Yellow/Amber
             ),
             const SizedBox(height: 20),
             _buildSupportCard(
@@ -47,6 +49,7 @@ class HelpSupportScreen extends StatelessWidget {
               'Let us know if something is not working',
               Icons.report_problem_outlined,
               isDark,
+              const Color(0xFFFF5252), // Red
             ),
             const SizedBox(height: 40),
             Text(
@@ -67,7 +70,7 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSupportCard(BuildContext context, String title, String subtitle, IconData icon, bool isDark) {
+  Widget _buildSupportCard(BuildContext context, String title, String subtitle, IconData icon, bool isDark, Color color) {
     return Material(
       color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
       borderRadius: BorderRadius.circular(16),
@@ -84,10 +87,10 @@ class HelpSupportScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00C853).withOpacity(0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: const Color(0xFF00C853)),
+                child: Icon(icon, color: color),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -125,7 +128,7 @@ class HelpSupportScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF00C853)),
+          Icon(icon, size: 20, color: isDark ? Colors.white : Colors.grey),
           const SizedBox(width: 15),
           Text(
             text,

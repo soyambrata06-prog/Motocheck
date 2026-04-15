@@ -6,12 +6,14 @@ class UserProvider extends ChangeNotifier {
   String _phoneNumber = '+91 98765 43210';
   String _email = 'soyamb@example.com';
   String _location = 'Bhubaneswar, Odisha';
+  String _dob = '15 June 1998';
   String _profileImageUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop';
 
   String get displayName => _displayName;
   String get phoneNumber => _phoneNumber;
   String get email => _email;
   String get location => _location;
+  String get dob => _dob;
   String get profileImageUrl => _profileImageUrl;
 
   UserProvider() {
@@ -24,6 +26,7 @@ class UserProvider extends ChangeNotifier {
     _phoneNumber = prefs.getString('user_phoneNumber') ?? _phoneNumber;
     _email = prefs.getString('user_email') ?? _email;
     _location = prefs.getString('user_location') ?? _location;
+    _dob = prefs.getString('user_dob') ?? _dob;
     _profileImageUrl = prefs.getString('user_profileImageUrl') ?? _profileImageUrl;
     notifyListeners();
   }
@@ -33,6 +36,7 @@ class UserProvider extends ChangeNotifier {
     String? phone,
     String? email,
     String? location,
+    String? dob,
     String? imageUrl,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,6 +56,10 @@ class UserProvider extends ChangeNotifier {
     if (location != null) {
       _location = location;
       await prefs.setString('user_location', location);
+    }
+    if (dob != null) {
+      _dob = dob;
+      await prefs.setString('user_dob', dob);
     }
     if (imageUrl != null) {
       _profileImageUrl = imageUrl;

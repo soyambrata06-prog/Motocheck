@@ -15,6 +15,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _locationController;
+  late TextEditingController _dobController;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -24,6 +26,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController = TextEditingController(text: userProvider.phoneNumber);
     _emailController = TextEditingController(text: userProvider.email);
     _locationController = TextEditingController(text: userProvider.location);
+    _dobController = TextEditingController(text: userProvider.dob);
   }
 
   @override
@@ -32,7 +35,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _locationController.dispose();
+    _dobController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isDark) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: isDark
+                ? const ColorScheme.dark(
+                    primary: Colors.white,
+                    onPrimary: Colors.black,
+                    surface: Color(0xFF1E1E1E),
+                    onSurface: Colors.white,
+                  )
+                : const ColorScheme.light(
+                    primary: Colors.black,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black,
+                  ),
+            dialogBackgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dobController.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+      });
+    }
   }
 
   @override
@@ -41,9 +86,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+      backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+        backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black),
@@ -132,6 +177,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 20),
             _buildTextField('Email Address', _emailController, Icons.email_outlined, isDark),
             const SizedBox(height: 20),
+            _buildDatePickerField('Date of Birth', _dobController, Icons.calendar_today_outlined, isDark),
+            const SizedBox(height: 20),
             _buildTextField('Location', _locationController, Icons.location_on_outlined, isDark),
             
             const SizedBox(height: 50),
@@ -146,6 +193,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     phone: _phoneController.text,
                     email: _emailController.text,
                     location: _locationController.text,
+                    dob: _dobController.text,
                   );
                   if (mounted) Navigator.pop(context);
                 },
@@ -200,6 +248,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black38, size: 22),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePickerField(String label, TextEditingController controller, IconData icon, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+        ),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: () => _selectDate(context, isDark),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+              ),
+            ),
+            child: AbsorbPointer(
+              child: TextField(
+                controller: controller,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black38, size: 22),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  hintText: 'Select your birth date',
+                  hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
+                ),
+              ),
             ),
           ),
         ),

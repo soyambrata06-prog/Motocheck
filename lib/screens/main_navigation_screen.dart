@@ -1,4 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../features/home/home_screen.dart';
 import '../features/check/check_screen.dart';
 import '../features/sos/sos_screen.dart';
@@ -22,9 +24,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (_selectedIndex != index) {
+      HapticFeedback.lightImpact();
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
@@ -32,65 +37,88 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double navBarWidth = screenWidth - 32;
+    
+    // Floating NavBar dimensions
+    const double horizontalPadding = 20;
+    final double navBarWidth = screenWidth - (horizontalPadding * 2);
     final double itemWidth = navBarWidth / 4;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      extendBody: true, // This allows the body to draw behind the nav bar
+      extendBody: true, // Allows body to go behind the floating nav bar
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        color: Colors.transparent, 
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), // Increased bottom padding
+        padding: const EdgeInsets.only(
+          left: horizontalPadding,
+          right: horizontalPadding,
+          bottom: 24, // Margin from bottom of screen
+        ),
         child: Container(
-          height: 64,
+          height: 72,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.black,
-            borderRadius: BorderRadius.circular(32),
+            color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withOpacity(0.85),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.4 : 0.2),
+                color: Colors.black.withOpacity(0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              // Sliding Background
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                left: _selectedIndex * itemWidth + 4,
-                top: 4,
-                bottom: 4,
-                width: itemWidth - 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(28),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Stack(
+                children: [
+                  // Sliding Background (Capsule)
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutBack, // Added a slight bounce effect
+                    left: _selectedIndex * itemWidth + 6,
+                    top: 8,
+                    bottom: 8,
+                    width: itemWidth - 12,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white : Colors.black,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  // Navigation Items
+                  Row(
+                    children: List.generate(4, (index) {
+                      IconData icon;
+                      String label;
+                      switch (index) {
+                        case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
+                        case 1: icon = Icons.search_rounded; label = 'CHECK'; break;
+                        case 2: icon = Icons.notifications_active_rounded; label = 'SOS'; break; // Changed icon
+                        case 3: icon = Icons.person_rounded; label = 'ME'; break;
+                        default: icon = Icons.home_rounded; label = '';
+                      }
+                      return _buildNavItem(index, icon, label, theme);
+                    }),
+                  ),
+                ],
               ),
-              // Navigation Items
-              Row(
-                children: List.generate(4, (index) {
-                  IconData icon;
-                  String label;
-                  switch (index) {
-                    case 0: icon = Icons.home_rounded; label = 'Home'; break;
-                    case 1: icon = Icons.search_rounded; label = 'Search'; break;
-                    case 2: icon = Icons.notification_important_rounded; label = 'SOS'; break;
-                    case 3: icon = Icons.person_rounded; label = 'Profile'; break;
-                    default: icon = Icons.home_rounded; label = '';
-                  }
-                  return _buildNavItem(index, icon, label, theme);
-                }),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -106,34 +134,32 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onTap: () => _onItemTapped(index),
         behavior: HitTestBehavior.opaque,
         child: Center(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: isSelected
-                ? Row(
-                    key: ValueKey('sel_$index'),
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(icon, color: theme.colorScheme.onSurface, size: 22),
-                      const SizedBox(width: 2),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  )
-                : Icon(
-                    icon,
-                    key: ValueKey('unsel_$index'),
-                    color: isDark ? Colors.white38 : Colors.white.withOpacity(0.6),
-                    size: 24,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected 
+                      ? (isDark ? Colors.black : Colors.white) 
+                      : (isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.4)),
+                  size: isSelected ? 24 : 26, // Subtle scale effect
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: isDark ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                      letterSpacing: 0.5,
+                    ),
                   ),
+                ],
+              ],
+            ),
           ),
         ),
       ),

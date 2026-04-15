@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../shared/widgets/skeleton_tile.dart';
 import 'result_screen.dart';
 
 class CheckScreen extends StatefulWidget {
@@ -44,15 +43,14 @@ class _CheckScreenState extends State<CheckScreen> {
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       body: RepaintBoundary(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: 60),
                 Text(
                   'Search',
                   style: TextStyle(
@@ -64,30 +62,45 @@ class _CheckScreenState extends State<CheckScreen> {
                 const SizedBox(height: 25),
                 // Search Bar
                 Container(
+                  height: 70, 
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white : Colors.black,
+                      width: 4.0, // Bolder outline 4.0
+                    ),
                   ),
-                  child: TextField(
-                    controller: _searchController,
-                    onSubmitted: _handleSearch,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                    decoration: InputDecoration(
-                      hintText: 'Search bike model or plate number...',
-                      hintStyle: TextStyle(color: Colors.grey[500]),
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-                      suffixIcon: _isSearching
-                          ? const Padding(
-                              padding: EdgeInsets.all(12.0),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00C853)),
-                              ),
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  child: Center(
+                    child: TextField(
+                      controller: _searchController,
+                      onSubmitted: _handleSearch,
+                      textAlignVertical: TextAlignVertical.center, // Vertically centered
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search bike model or plate number...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontWeight: FontWeight.normal,
+                        ),
+                        prefixIcon: Icon(Icons.search, color: isDark ? Colors.white : Colors.black, size: 28),
+                        suffixIcon: _isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00C853)),
+                                ),
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero, // Zero padding with Center widget handles alignment
+                      ),
                     ),
                   ),
                 ),
@@ -125,13 +138,13 @@ class _CheckScreenState extends State<CheckScreen> {
                 _buildRecentSearch(isDark, 'Yamaha R1M', 'XYZ 9876'),
                 const SizedBox(height: 12),
                 _buildRecentSearch(isDark, 'Ducati Panigale V4', 'BKR 4455'),
-                const SizedBox(height: 100),
+                const SizedBox(height: 120),
               ],
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildQuickAction(bool isDark, String label, IconData icon) {

@@ -12,9 +12,9 @@ class NotificationSettingsScreen extends StatelessWidget {
     final notificationProvider = Provider.of<NotificationProvider>(context);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+      backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+        backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
         scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
@@ -220,17 +220,6 @@ class NotificationSettingsScreen extends StatelessWidget {
           ),
         ),
         Container(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
           child: Column(
             children: children,
           ),
@@ -250,7 +239,7 @@ class NotificationSettingsScreen extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           onTap: () => onChanged(!value),
           splashColor: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
           hoverColor: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.02),
@@ -285,8 +274,8 @@ class NotificationSettingsScreen extends StatelessWidget {
             height: 1,
             thickness: 1,
             color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50],
-            indent: 20,
-            endIndent: 20,
+            indent: 4,
+            endIndent: 4,
           ),
       ],
     );

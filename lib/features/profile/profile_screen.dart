@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme_provider.dart';
@@ -72,283 +73,285 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final theme = Theme.of(context);
+    final isDark = themeProvider.isDarkMode;
 
     return Scaffold(
-      backgroundColor: themeProvider.isDarkMode ? theme.scaffoldBackgroundColor : const Color(0xFFF8F9FA),
+      backgroundColor: themeProvider.isDarkMode ? Colors.black : const Color(0xFFF8F9FA),
       body: RepaintBoundary(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                // Header
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    color: theme.colorScheme.onSurface,
-                  ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 60),
+              // Header
+              Text(
+                'Profile',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: theme.colorScheme.onSurface,
                 ),
-                const SizedBox(height: 80),
-                
-                // Profile & QR Card with Dual Overlapping Elements
-                RepaintBoundary(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: double.infinity,
+              ),
+              const SizedBox(height: 30),
+              
+              // Profile Card with Enhanced Frosted Glass UI
+              RepaintBoundary(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isDark ? Colors.black : theme.colorScheme.primary.withOpacity(0.1)),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
+                          gradient: RadialGradient(
+                            center: Alignment.center,
+                            radius: 1.0,
+                            colors: [
+                              (isDark ? Colors.white : theme.colorScheme.surface).withOpacity(isDark ? 0.08 : 0.2),
+                              (isDark ? Colors.white : theme.colorScheme.surface).withOpacity(isDark ? 0.02 : 0.1),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(28),
                           border: Border.all(
-                            color: theme.colorScheme.onSurface.withOpacity(0.05),
-                            width: 1,
+                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.15),
+                            width: 1.2,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
                         ),
-                        padding: const EdgeInsets.fromLTRB(22, 90, 22, 22),
-                        child: Column(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              userProvider.displayName,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                color: theme.colorScheme.onSurface,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildLightInfoRow(
-                                context, Icons.phone_outlined, userProvider.phoneNumber, iconColor: const Color(0xFF448AFF)),
-                            _buildLightInfoRow(
-                                context, Icons.email_outlined, userProvider.email, iconColor: const Color(0xFFFFAB40)),
-                            _buildLightInfoRow(context, Icons.location_on_outlined,
-                                userProvider.location, iconColor: const Color(0xFFFF5252)),
-                            _buildLightInfoRow(
-                                context, Icons.verified_user_outlined, 'KYC Verified', isVerified: true, iconColor: const Color(0xFF00C853)),
-                          ],
-                        ),
-                      ),
-                      // DP floating out (Left)
-                      Positioned(
-                        top: -55,
-                        left: 22,
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 130,
-                              height: 130,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(30),
-                                image: DecorationImage(
-                                  image: NetworkImage(userProvider.profileImageUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                                border: Border.all(
-                                  color: theme.scaffoldBackgroundColor,
-                                  width: 4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
+                            // Details Section
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 5), // Align with DP
+                                  Text(
+                                    userProvider.displayName,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w900,
+                                      color: theme.colorScheme.onSurface,
+                                      letterSpacing: 0.2,
+                                    ),
                                   ),
+                                  const SizedBox(height: 12),
+                                  _buildLightInfoRow(
+                                      context, Icons.phone_outlined, userProvider.phoneNumber, iconColor: isDark ? Colors.white : Colors.grey),
+                                  _buildLightInfoRow(
+                                      context, Icons.email_outlined, userProvider.email, iconColor: isDark ? Colors.white : Colors.grey),
+                                  _buildLightInfoRow(
+                                      context, Icons.calendar_today_outlined, userProvider.dob, iconColor: isDark ? Colors.white : Colors.grey),
+                                  _buildLightInfoRow(context, Icons.location_on_outlined,
+                                      userProvider.location, iconColor: isDark ? Colors.white : Colors.grey),
                                 ],
                               ),
                             ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Material(
-                                color: theme.colorScheme.onSurface,
-                                shape: const CircleBorder(),
-                                clipBehavior: Clip.antiAlias,
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                                    );
-                                  },
-                                  splashColor: theme.colorScheme.surface.withOpacity(0.1),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(7),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.1), width: 1.5),
+                            const SizedBox(width: 20),
+                            // DP Section
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(30),
+                                    image: DecorationImage(
+                                      image: NetworkImage(userProvider.profileImageUrl),
+                                      fit: BoxFit.cover,
                                     ),
-                                    child: Icon(Icons.edit, color: theme.colorScheme.surface, size: 16),
+                                    border: Border.all(
+                                      color: theme.scaffoldBackgroundColor,
+                                      width: 4,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF00C853).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Icon(Icons.verified_user_outlined, size: 14, color: Color(0xFF00C853)),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Verified',
+                                        style: TextStyle(
+                                          color: Color(0xFF00C853),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                      // QR Code floating out (Right)
-                      Positioned(
-                        top: -55,
-                        right: 22,
-                        child: Container(
-                          width: 130,
-                          height: 130,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: theme.scaffoldBackgroundColor,
-                              width: 4,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: Image.network(
-                              'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OR01-202300456789&color=000000',
-                              fit: BoxFit.contain,
-                              color: theme.colorScheme.onSurface,
-                              colorBlendMode: BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                
-                const SizedBox(height: 35),
-                Text(
-                  'Settings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: theme.colorScheme.onSurface,
-                  ),
+              ),
+              
+              const SizedBox(height: 35),
+              Text(
+                'Settings',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: theme.colorScheme.onSurface,
                 ),
-                const SizedBox(height: 15),
-                
-                // Settings List
-                Material(
-                  color: theme.colorScheme.surface,
+              ),
+              const SizedBox(height: 15),
+              
+              // Settings List with Enhanced Frosted Glass UI
+              Container(
+                decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  clipBehavior: Clip.antiAlias,
-                  elevation: 0,
-                  child: Column(
-                    children: [
-                      _buildSettingsTile(
-                        context,
-                        Icons.notifications_none_rounded, 
-                        'Notifications', 
-                        iconColor: const Color(0xFF7C4DFF), // Purple
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
-                          );
-                        },
-                      ),
-                      _buildThemeTile(context, themeProvider),
-                      _buildSettingsTile(
-                        context,
-                        Icons.headset_mic_outlined, 
-                        'Help & Support', 
-                        iconColor: const Color(0xFF00C853), // Green
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
-                          );
-                        },
-                      ),
-                      _buildSettingsTile(
-                        context,
-                        Icons.verified_user_outlined, 
-                        'Privacy', 
-                        iconColor: const Color(0xFF448AFF), // Blue
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const PrivacyScreen()),
-                          );
-                        },
-                      ),
-                      _buildSettingsTile(
-                        context,
-                        Icons.info_outline_rounded, 
-                        'About', 
-                        isLast: true,
-                        iconColor: const Color(0xFFFFAB40), // Orange
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AboutScreen()),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 25),
-                
-                // Logout Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: OutlinedButton(
-                    onPressed: () => _onSignOut(context),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFE03131), width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.logout_rounded, color: Color(0xFFE03131)),
-                        SizedBox(width: 10),
-                        Text(
-                          'Log Out',
-                          style: TextStyle(
-                            color: Color(0xFFE03131),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                          ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 1.1,
+                          colors: [
+                            (isDark ? Colors.white : theme.colorScheme.surface).withOpacity(isDark ? 0.08 : 0.2),
+                            (isDark ? Colors.white : theme.colorScheme.surface).withOpacity(isDark ? 0.02 : 0.1),
+                          ],
                         ),
-                      ],
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSettingsTile(
+                            context,
+                            Icons.person_outline_rounded, 
+                            'Edit Profile', 
+                            iconColor: isDark ? Colors.white : Colors.grey,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                              );
+                            },
+                          ),
+                          _buildSettingsTile(
+                            context,
+                            Icons.notifications_none_rounded, 
+                            'Notifications', 
+                            iconColor: isDark ? Colors.white : Colors.grey,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                              );
+                            },
+                          ),
+                          _buildThemeTile(context, themeProvider),
+                          _buildSettingsTile(
+                            context,
+                            Icons.headset_mic_outlined, 
+                            'Help & Support', 
+                            iconColor: isDark ? Colors.white : Colors.grey,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+                              );
+                            },
+                          ),
+                          _buildSettingsTile(
+                            context,
+                            Icons.verified_user_outlined, 
+                            'Privacy', 
+                            iconColor: isDark ? Colors.white : Colors.grey,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const PrivacyScreen()),
+                              );
+                            },
+                          ),
+                          _buildSettingsTile(
+                            context,
+                            Icons.info_outline_rounded, 
+                            'About', 
+                            iconColor: isDark ? Colors.white : Colors.grey,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AboutScreen()),
+                              );
+                            },
+                          ),
+                          _buildSettingsTile(
+                            context,
+                            Icons.logout_rounded, 
+                            'Log Out', 
+                            isLast: true,
+                            iconColor: const Color(0xFFE03131),
+                            textColor: const Color(0xFFE03131),
+                            onTap: () => _onSignOut(context),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 100), // Padding for nav bar
+              ),
+                
+                const SizedBox(height: 140), // Extra space for floating nav bar
               ],
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildLightInfoRow(BuildContext context, IconData icon, String text, {bool isVerified = false, required Color iconColor}) {
@@ -375,32 +378,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSettingsTile(BuildContext context, IconData icon, String title, {VoidCallback? onTap, bool isLast = false, required Color iconColor}) {
+  Widget _buildSettingsTile(BuildContext context, IconData icon, String title, {VoidCallback? onTap, bool isLast = false, required Color iconColor, Color? textColor}) {
     final theme = Theme.of(context);
     return Column(
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: iconColor, size: 22),
-          ),
+          leading: Icon(icon, color: iconColor, size: 22),
           title: Text(
             title,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+              color: textColor ?? theme.colorScheme.onSurface,
             ),
           ),
           trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.3)),
           onTap: onTap,
-          splashColor: theme.colorScheme.onSurface.withOpacity(0.08),
-          hoverColor: theme.colorScheme.onSurface.withOpacity(0.04),
+          splashColor: (textColor ?? theme.colorScheme.onSurface).withOpacity(0.08),
+          hoverColor: (textColor ?? theme.colorScheme.onSurface).withOpacity(0.04),
         ),
         if (!isLast)
           Divider(height: 1, thickness: 1, color: theme.colorScheme.onSurface.withOpacity(0.05), indent: 60),
@@ -411,7 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildThemeTile(BuildContext context, ThemeProvider themeProvider) {
     final theme = Theme.of(context);
     final isDarkMode = themeProvider.isDarkMode;
-    final Color iconColor = isDarkMode ? const Color(0xFFFFD740) : const Color(0xFFFFAB40);
+    final Color iconColor = isDarkMode ? Colors.white : Colors.grey;
     return Column(
       children: [
         ListTile(
@@ -419,20 +415,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () => themeProvider.toggleTheme(!isDarkMode),
           splashColor: theme.colorScheme.onSurface.withOpacity(0.08),
           hoverColor: theme.colorScheme.onSurface.withOpacity(0.04),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              child: Icon(
-                isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_outlined,
-                key: ValueKey(isDarkMode ? 'dark_icon' : 'light_icon'),
-                color: iconColor,
-                size: 22,
-              ),
+          leading: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            child: Icon(
+              isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+              key: ValueKey(isDarkMode ? 'dark_icon' : 'light_icon'),
+              color: iconColor,
+              size: 22,
             ),
           ),
           title: Text(
@@ -552,25 +541,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildThemeOption(IconData icon, String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.black : Colors.transparent,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 14),
-          if (isActive) ...[
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  // Removed unused _buildThemeOption
 }
