@@ -231,7 +231,7 @@ class HomeScreen extends StatelessWidget {
     if (title.contains('Speeding')) {
       iconColor = const Color(0xFFFF5252); // Red
     } else if (title.contains('Legality')) {
-      iconColor = const Color(0xFF00C853); // Green
+      iconColor = const Color(0xFF448AFF); // Blue
     } else {
       iconColor = const Color(0xFFFFD740); // Yellow
     }

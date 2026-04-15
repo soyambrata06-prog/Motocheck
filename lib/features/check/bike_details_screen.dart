@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'widgets/bike_card.dart';
 import 'widgets/spec_card.dart';
 import '../../../data/models/bike_model.dart';

@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>MotoCheck needs camera access to scan license plates.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MotoCheck needs microphone access for video recording (if applicable).</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MotoCheck needs access to your photo library to pick images for profile or scans.</string>
 </dict>
 </plist>

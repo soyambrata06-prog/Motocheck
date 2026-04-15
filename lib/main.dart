@@ -6,6 +6,7 @@ import 'core/theme_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/user_provider.dart';
 import 'core/providers/sos_provider.dart';
+import 'core/providers/bike_provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'core/services/auth_service.dart';
@@ -24,6 +25,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SosProvider()),
+        ChangeNotifierProvider(create: (_) => BikeProvider()),
         Provider(create: (_) => AuthService()),
       ],
       child: const MotoCheckApp(),

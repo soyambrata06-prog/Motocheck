@@ -24,7 +24,6 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  List<String> _recentSearches = ['KTM Duke 390', 'Hunter 350'];
 
   final List<Company> _companies = [
     Company('KTM', [
@@ -122,18 +121,6 @@ class _SearchScreenState extends State<SearchScreen> {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       children: [
-        if (_recentSearches.isNotEmpty) ...[
-          const Text(
-            'RECENT SEARCHES',
-            style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            children: _recentSearches.map((s) => _buildRecentTag(s)).toList(),
-          ),
-          const SizedBox(height: 32),
-        ],
         const Text(
           'MANUFACTURERS',
           style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2),
@@ -142,17 +129,6 @@ class _SearchScreenState extends State<SearchScreen> {
         ..._companies.map((company) => _buildCompanyAccordion(company)),
         const SizedBox(height: 100),
       ],
-    );
-  }
-
-  Widget _buildRecentTag(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.white10),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
     );
   }
 

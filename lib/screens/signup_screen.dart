@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/theme_provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'main_navigation_screen.dart';
+import '../routes/route_names.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,119 +19,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: isDark ? Colors.black : Colors.white,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Join MotoCheck for a safer ride.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Full Name Field
-              Text(
-                'Full Name',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                decoration: _inputDecoration('John Doe', isDark),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your name';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Email Field
-              Text(
-                'Email',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                decoration: _inputDecoration('name@example.com', isDark),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your email';
-                  if (!value.contains('@')) return 'Please enter a valid email';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Password Field
-              Text(
-                'Password',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                obscureText: _obscurePassword,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                decoration: _inputDecoration('••••••••', isDark).copyWith(
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Text(
+                  'Sign up',
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
+                    height: 1.1,
+                    letterSpacing: -1,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Please enter your password';
-                  if (value.length < 6) return 'Password must be at least 6 characters';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 40),
-
-              // Sign Up Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
+                const SizedBox(height: 10),
+                Text(
+                  'Join MotoCheck community',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white54 : Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                _buildInputField(
+                  isDark: isDark,
+                  icon: FontAwesomeIcons.user,
+                  hint: 'Full Name',
+                ),
+                const SizedBox(height: 20),
+                _buildInputField(
+                  isDark: isDark,
+                  icon: FontAwesomeIcons.envelope,
+                  hint: 'Email Address',
+                ),
+                const SizedBox(height: 20),
+                _buildInputField(
+                  isDark: isDark,
+                  icon: FontAwesomeIcons.lock,
+                  hint: 'Password',
+                  isPassword: true,
+                  obscureText: _obscurePassword,
+                  onToggleVisibility: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       Navigator.pushAndRemoveUntil(
@@ -142,59 +95,113 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDark ? Colors.white : Colors.black,
                     foregroundColor: isDark ? Colors.black : Colors.white,
+                    minimumSize: const Size.fromHeight(64),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Sign Up',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    'Sign up', 
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              // Terms & Conditions
-              Center(
-                child: Text(
-                  'By continuing, you agree to our Terms and Privacy Policy.',
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 24),
+                Text(
+                  'By signing up, you agree to our Terms of Service and Privacy Policy.',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white38 : Colors.black38,
+                    color: isDark ? Colors.white38 : Colors.black38, 
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 40),
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, RouteNames.login);
+                    },
+                    child: RichText(
+                      text: TextSpan(
+                        text: "Already have an account? ",
+                        style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 16),
+                        children: [
+                          TextSpan(
+                            text: 'Sign In',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  InputDecoration _inputDecoration(String hint, bool isDark) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
-      filled: true,
-      fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
+  Widget _buildInputField({
+    required bool isDark,
+    required IconData icon,
+    required String hint,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF121212) : Colors.grey[100],
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        border: Border.all(
+          color: isDark ? Colors.white24 : Colors.transparent,
+          width: 1,
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+      child: Row(
+        children: [
+          FaIcon(icon, color: isDark ? Colors.white54 : Colors.black54, size: 20),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              obscureText: obscureText,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white24 : Colors.black26, 
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                border: InputBorder.none,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Required';
+                return null;
+              },
+            ),
+          ),
+          if (isPassword)
+            IconButton(
+              onPressed: onToggleVisibility,
+              icon: FaIcon(
+                obscureText ? FontAwesomeIcons.eyeSlash : FontAwesomeIcons.eye,
+                color: isDark ? Colors.white54 : Colors.black54,
+                size: 18,
+              ),
+            ),
+        ],
       ),
     );
   }

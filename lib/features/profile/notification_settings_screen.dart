@@ -219,10 +219,8 @@ class NotificationSettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-        Container(
-          child: Column(
-            children: children,
-          ),
+        Column(
+          children: children,
         ),
       ],
     );

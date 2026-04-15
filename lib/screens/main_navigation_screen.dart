@@ -15,6 +15,19 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   static const List<Widget> _screens = [
     HomeScreen(),
@@ -29,7 +42,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       setState(() {
         _selectedIndex = index;
       });
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
     }
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -44,11 +68,55 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final double itemWidth = navBarWidth / 4;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDark ? Colors.black : theme.scaffoldBackgroundColor,
       extendBody: true, // Allows body to go behind the floating nav bar
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
+      body: ScrollConfiguration(
+        behavior: const ScrollBehavior().copyWith(overscroll: false), // Removes the grey glow
+        child: PageView.builder(
+          controller: _pageController,
+          onPageChanged: _onPageChanged,
+          physics: const BouncingScrollPhysics(),
+          itemCount: _screens.length,
+          itemBuilder: (context, index) {
+            return AnimatedBuilder(
+              animation: _pageController,
+              builder: (context, child) {
+                double value = 0.0;
+                if (_pageController.hasClients && _pageController.position.haveDimensions) {
+                  value = _pageController.page! - index;
+                } else {
+                  value = (_selectedIndex - index).toDouble();
+                }
+
+                // Normalizing value between -1.0 and 1.0
+                double offset = value.clamp(-1.0, 1.0);
+                
+                // Fade effect: sharpening the curve for a more professional feel
+                double opacity = (1 - offset.abs() * 1.5).clamp(0.0, 1.0);
+                
+                // Scale effect: subtle shrinking to give depth
+                double scale = 1.0 - (offset.abs() * 0.05);
+                
+                // Vertical shift logic: 
+                double yOffset = offset.abs() * 80; 
+
+                // Counteract PageView's horizontal sliding
+                double xOffset = value * MediaQuery.of(context).size.width;
+
+                return Transform.translate(
+                  offset: Offset(xOffset, yOffset),
+                  child: Transform.scale(
+                    scale: scale,
+                    child: Opacity(
+                      opacity: opacity,
+                      child: _screens[index],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(
@@ -79,27 +147,37 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Stack(
                 children: [
-                  // Sliding Background (Capsule)
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutBack, // Added a slight bounce effect
-                    left: _selectedIndex * itemWidth + 6,
-                    top: 8,
-                    bottom: 8,
-                    width: itemWidth - 12,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white : Colors.black,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                  // Sliding Background (Capsule) - Now following the PageController linearly
+                  AnimatedBuilder(
+                    animation: _pageController,
+                    builder: (context, child) {
+                      double page = 0;
+                      if (_pageController.hasClients && _pageController.position.haveDimensions) {
+                        page = _pageController.page!;
+                      } else {
+                        page = _selectedIndex.toDouble();
+                      }
+                      
+                      return Positioned(
+                        left: page * itemWidth + 6,
+                        top: 8,
+                        bottom: 8,
+                        width: itemWidth - 12,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white : Colors.black,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                   // Navigation Items
                   Row(
@@ -108,12 +186,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       String label;
                       switch (index) {
                         case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
-                        case 1: icon = Icons.search_rounded; label = 'CHECK'; break;
+                        case 1: icon = Icons.search_rounded; label = 'SEARCH'; break;
                         case 2: icon = Icons.notifications_active_rounded; label = 'SOS'; break; // Changed icon
                         case 3: icon = Icons.person_rounded; label = 'ME'; break;
                         default: icon = Icons.home_rounded; label = '';
                       }
-                      return _buildNavItem(index, icon, label, theme);
+                      return _buildNavItem(index, icon, label, theme, itemWidth);
                     }),
                   ),
                 ],
@@ -125,42 +203,79 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, ThemeData theme) {
-    bool isSelected = _selectedIndex == index;
+  Widget _buildNavItem(int index, IconData icon, String label, ThemeData theme, double itemWidth) {
     final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
       child: GestureDetector(
         onTap: () => _onItemTapped(index),
         behavior: HitTestBehavior.opaque,
-        child: Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected 
-                      ? (isDark ? Colors.black : Colors.white) 
-                      : (isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.4)),
-                  size: isSelected ? 24 : 26, // Subtle scale effect
-                ),
-                if (isSelected) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: isDark ? Colors.black : Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
+        child: AnimatedBuilder(
+          animation: _pageController,
+          builder: (context, child) {
+            double page = 0;
+            if (_pageController.hasClients && _pageController.position.haveDimensions) {
+              page = _pageController.page!;
+            } else {
+              page = _selectedIndex.toDouble();
+            }
+
+            // Calculate how "active" this specific tab is (1.0 = fully active, 0.0 = inactive)
+            double distance = (page - index).abs();
+            
+            // To make text show only after capsule reaches/is very close
+            // we use a steeper curve or a threshold.
+            // Using a threshold or a power function to delay the text appearance
+            double activePercent = (1 - distance).clamp(0.0, 1.0);
+            
+            // Delayed text appearance: only starts showing when capsule is 80% there
+            double textOpacity = (activePercent > 0.8) ? (activePercent - 0.8) / 0.2 : 0.0;
+            double textWidthFactor = (activePercent > 0.7) ? (activePercent - 0.7) / 0.3 : 0.0;
+            
+            // Icon color interpolation
+            Color iconColor = Color.lerp(
+              isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.4),
+              isDark ? Colors.black : Colors.white,
+              activePercent,
+            )!;
+
+            return Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    color: iconColor,
+                    size: 24,
+                  ),
+                  // Animated Text (Reveal and Fade)
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: textWidthFactor,
+                      child: Opacity(
+                        opacity: textOpacity,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.clip,
+                            style: TextStyle(
+                              color: isDark ? Colors.black : Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

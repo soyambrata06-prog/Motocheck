@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../routes/route_names.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AuthChoiceScreen extends StatelessWidget {
   const AuthChoiceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.black : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -16,120 +19,138 @@ class AuthChoiceScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
+              // Logo Section
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.shield_outlined, size: 60, color: Colors.black),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'MotoCheck',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
+                child: Text(
+                  'motocheck',
+                  style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
+                    letterSpacing: -2,
                   ),
                 ),
               ),
               const Spacer(flex: 2),
+              
+              // Action Buttons
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, RouteNames.login),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
+                  backgroundColor: isDark ? Colors.white : Colors.black,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  minimumSize: const Size.fromHeight(64),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 0,
                 ),
-                child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Sign In', 
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: () => Navigator.pushNamed(context, RouteNames.signup),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  side: const BorderSide(color: Colors.black, width: 1.5),
-                  minimumSize: const Size.fromHeight(56),
+                  foregroundColor: isDark ? Colors.white : Colors.black,
+                  side: BorderSide(
+                    color: isDark ? Colors.white : Colors.black, 
+                    width: 3.0
+                  ),
+                  minimumSize: const Size.fromHeight(64),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text('Sign Up', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Create Account', 
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)
+                ),
               ),
-              const SizedBox(height: 24),
+              
+              const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('OR', style: TextStyle(color: Colors.black38, fontWeight: FontWeight.bold)),
+                  Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12, thickness: 2)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR CONTINUE WITH', 
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black38, 
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        letterSpacing: 1.2,
+                      )
+                    ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey[300])),
+                  Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12, thickness: 2)),
                 ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  // Social login logic
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/images/google.png',
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.white),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text('Sign in with Google', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Social login logic
-                },
-                icon: const Icon(Icons.apple, size: 24, color: Colors.white),
-                label: const Text('Sign in with Apple'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
               const SizedBox(height: 32),
+              
+              // Social Login
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSocialButton(
+                      onPressed: () {},
+                      icon: FontAwesomeIcons.google,
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildSocialButton(
+                      onPressed: () {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context, 
+                          RouteNames.home, 
+                          (route) => false,
+                        );
+                      },
+                      icon: FontAwesomeIcons.apple,
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 40),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Container(
+      height: 64,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF121212) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white24 : Colors.transparent,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Center(
+            child: FaIcon(
+              icon, 
+              color: isDark ? Colors.white : Colors.black,
+              size: 24,
+            ),
           ),
         ),
       ),
