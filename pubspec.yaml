@@ -7,6 +7,7 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  model_viewer_plus: ^1.7.0
   flutter:
     sdk: flutter
   font_awesome_flutter: ^10.7.0
@@ -33,3 +34,4 @@ flutter:
 
   assets:
     - assets/images/
+

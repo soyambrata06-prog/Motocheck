@@ -29,43 +29,102 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double navBarWidth = screenWidth - 32;
+    final double itemWidth = navBarWidth / 4;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black38,
-        showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(32),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.verified_user_outlined),
-            activeIcon: Icon(Icons.verified_user_rounded),
-            label: 'Check',
+          child: Stack(
+            children: [
+              // Sliding Background
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                left: _selectedIndex * itemWidth + 4,
+                top: 4,
+                bottom: 4,
+                width: itemWidth - 8,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+              ),
+              // Navigation Items
+              Row(
+                children: List.generate(4, (index) {
+                  IconData icon;
+                  String label;
+                  switch (index) {
+                    case 0: icon = Icons.home_rounded; label = 'Home'; break;
+                    case 1: icon = Icons.search_rounded; label = 'Search'; break;
+                    case 2: icon = Icons.notification_important_rounded; label = 'SOS'; break;
+                    case 3: icon = Icons.person_rounded; label = 'Profile'; break;
+                    default: icon = Icons.home_rounded; label = '';
+                  }
+                  return _buildNavItem(index, icon, label);
+                }),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sos_outlined),
-            activeIcon: Icon(Icons.sos_rounded),
-            label: 'SOS',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    bool isSelected = _selectedIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onItemTapped(index),
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: isSelected
+                ? Row(
+                    key: ValueKey('sel_$index'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, color: Colors.black, size: 22),
+                      const SizedBox(width: 2),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  )
+                : Icon(
+                    icon,
+                    key: ValueKey('unsel_$index'),
+                    color: Colors.white.withOpacity(0.6),
+                    size: 24,
+                  ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person_rounded),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }
