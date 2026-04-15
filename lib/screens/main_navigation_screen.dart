@@ -35,18 +35,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true, // This allows the body to draw behind the nav bar
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        color: Colors.white,
+        color: Colors.transparent, // Explicitly transparent
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: Container(
           height: 64,
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Stack(
             children: [

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "196266510615",
+    "project_id": "motocheck-36930",
+    "storage_bucket": "motocheck-36930.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:196266510615:android:4723d8b283978fb5440f52",
+        "android_client_info": {
+          "package_name": "com.prototype.motocheck"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "196266510615-b1lgqhg91a6av4eur8fmaijkt0s4mtg8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZE17JG0MMIqjhOMZcplg9lsmfuINRniU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "196266510615-b1lgqhg91a6av4eur8fmaijkt0s4mtg8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
