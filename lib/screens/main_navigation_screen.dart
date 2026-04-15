@@ -29,28 +29,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final double screenWidth = MediaQuery.of(context).size.width;
     final double navBarWidth = screenWidth - 32;
     final double itemWidth = navBarWidth / 4;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       extendBody: true, // This allows the body to draw behind the nav bar
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
       ),
       bottomNavigationBar: Container(
-        color: Colors.transparent, // Explicitly transparent
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        color: Colors.transparent, 
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), // Increased bottom padding
         child: Container(
           height: 64,
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.black,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withOpacity(isDark ? 0.4 : 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -68,7 +70,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 width: itemWidth - 8,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(28),
                   ),
                 ),
@@ -85,7 +87,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     case 3: icon = Icons.person_rounded; label = 'Profile'; break;
                     default: icon = Icons.home_rounded; label = '';
                   }
-                  return _buildNavItem(index, icon, label);
+                  return _buildNavItem(index, icon, label, theme);
                 }),
               ),
             ],
@@ -95,8 +97,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  Widget _buildNavItem(int index, IconData icon, String label, ThemeData theme) {
     bool isSelected = _selectedIndex == index;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
       child: GestureDetector(
@@ -113,12 +116,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     key: ValueKey('sel_$index'),
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(icon, color: Colors.black, size: 22),
+                      Icon(icon, color: theme.colorScheme.onSurface, size: 22),
                       const SizedBox(width: 2),
                       Text(
                         label,
-                        style: const TextStyle(
-                          color: Colors.black,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -128,7 +131,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 : Icon(
                     icon,
                     key: ValueKey('unsel_$index'),
-                    color: Colors.white.withOpacity(0.6),
+                    color: isDark ? Colors.white38 : Colors.white.withOpacity(0.6),
                     size: 24,
                   ),
           ),

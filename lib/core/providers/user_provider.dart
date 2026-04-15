@@ -1,0 +1,63 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class UserProvider extends ChangeNotifier {
+  String _displayName = 'Soyambrata Nayak';
+  String _phoneNumber = '+91 98765 43210';
+  String _email = 'soyamb@example.com';
+  String _location = 'Bhubaneswar, Odisha';
+  String _profileImageUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop';
+
+  String get displayName => _displayName;
+  String get phoneNumber => _phoneNumber;
+  String get email => _email;
+  String get location => _location;
+  String get profileImageUrl => _profileImageUrl;
+
+  UserProvider() {
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    _displayName = prefs.getString('user_displayName') ?? _displayName;
+    _phoneNumber = prefs.getString('user_phoneNumber') ?? _phoneNumber;
+    _email = prefs.getString('user_email') ?? _email;
+    _location = prefs.getString('user_location') ?? _location;
+    _profileImageUrl = prefs.getString('user_profileImageUrl') ?? _profileImageUrl;
+    notifyListeners();
+  }
+
+  Future<void> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? location,
+    String? imageUrl,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (name != null) {
+      _displayName = name;
+      await prefs.setString('user_displayName', name);
+    }
+    if (phone != null) {
+      _phoneNumber = phone;
+      await prefs.setString('user_phoneNumber', phone);
+    }
+    if (email != null) {
+      _email = email;
+      await prefs.setString('user_email', email);
+    }
+    if (location != null) {
+      _location = location;
+      await prefs.setString('user_location', location);
+    }
+    if (imageUrl != null) {
+      _profileImageUrl = imageUrl;
+      await prefs.setString('user_profileImageUrl', imageUrl);
+    }
+    
+    notifyListeners();
+  }
+}

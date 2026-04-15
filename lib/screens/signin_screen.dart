@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../core/theme_provider.dart';
 import 'main_navigation_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -14,13 +16,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new, color: isDark ? Colors.white : Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -31,37 +34,39 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Welcome Back',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Sign in to continue your journey.',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.black54,
+                  color: isDark ? Colors.white70 : Colors.black54,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 40),
 
               // Email Field
-              const Text(
+              Text(
                 'Email',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
-                decoration: _inputDecoration('name@example.com'),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                decoration: _inputDecoration('name@example.com', isDark),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Please enter your email';
                   if (!value.contains('@')) return 'Please enter a valid email';
@@ -74,20 +79,20 @@ class _SignInScreenState extends State<SignInScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Password',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: isDark ? Colors.white70 : Colors.black87,
                     ),
                   ),
                   TextButton(
                     onPressed: () {},
-                    child: const Text(
+                    child: Text(
                       'Forgot Password?',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -97,11 +102,12 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               TextFormField(
                 obscureText: _obscurePassword,
-                decoration: _inputDecoration('••••••••').copyWith(
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                decoration: _inputDecoration('••••••••', isDark).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: Colors.black38,
+                      color: isDark ? Colors.white38 : Colors.black38,
                     ),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
@@ -129,8 +135,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -149,12 +155,12 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
+  InputDecoration _inputDecoration(String hint, bool isDark) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.black26),
+      hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
       filled: true,
-      fillColor: Colors.grey.shade50,
+      fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -162,11 +168,11 @@ class _SignInScreenState extends State<SignInScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.black12, width: 1),
+        borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.black, width: 1.5),
+        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),

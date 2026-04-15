@@ -7,29 +7,31 @@ class SosButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red.withValues(alpha: 0.4),
-              spreadRadius: 10,
-              blurRadius: 20,
+    return RepaintBoundary(
+      child: Material(
+        color: Colors.red,
+        shape: const CircleBorder(),
+        elevation: 8,
+        shadowColor: Colors.red.withOpacity(0.5),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          splashColor: Colors.white.withOpacity(0.3),
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
             ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            'SOS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
+            child: const Center(
+              child: Text(
+                'SOS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ),

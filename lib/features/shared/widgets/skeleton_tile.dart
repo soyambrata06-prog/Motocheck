@@ -40,6 +40,7 @@ class _SkeletonTileState extends State<SkeletonTile> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
@@ -51,11 +52,17 @@ class _SkeletonTileState extends State<SkeletonTile> with SingleTickerProviderSt
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: const [
-                Color(0xFFF1F1F1),
-                Color(0xFFE0E0E0),
-                Color(0xFFF1F1F1),
-              ],
+              colors: isDark 
+                ? [
+                    const Color(0xFF1E1E1E),
+                    const Color(0xFF2C2C2C),
+                    const Color(0xFF1E1E1E),
+                  ]
+                : [
+                    const Color(0xFFF1F1F1),
+                    const Color(0xFFE0E0E0),
+                    const Color(0xFFF1F1F1),
+                  ],
               stops: [
                 0.0,
                 (_animation.value + 1) / 2,

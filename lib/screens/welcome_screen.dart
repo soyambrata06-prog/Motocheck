@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import '../core/theme_provider.dart';
 import '../core/services/auth_service.dart';
 import 'signin_screen.dart';
 import 'signup_screen.dart';
@@ -19,15 +20,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
-      final user = await _authService.signInWithGoogle();
-      if (user != null) {
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-            (route) => false,
-          );
-        }
+      await _authService.signInWithGoogle();
+      // AuthWrapper will handle navigation automatically
+    } catch (e) {
+      debugPrint('Google Sign-In Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${e.toString()}')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -36,8 +36,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       body: Stack(
         children: [
           SafeArea(
@@ -47,20 +48,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 children: [
                   const Spacer(flex: 2),
                   // Title
-                  const Text(
+                  Text(
                     'MotoCheck',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -1,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Ride Safe. Ride Legal.',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black54,
+                      color: isDark ? Colors.white70 : Colors.black54,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -71,11 +73,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     icon: Image.asset('assets/images/google.png', height: 24),
                     label: 'Continue with Google',
                     onPressed: _handleGoogleSignIn,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 16),
                   _SocialButton(
-                    icon: const Icon(Icons.apple, size: 28, color: Colors.black),
+                    icon: Icon(Icons.apple, size: 28, color: isDark ? Colors.white : Colors.black),
                     label: 'Continue with Apple',
+                    isDark: isDark,
                     onPressed: () {
                       // Apple Sign In placeholder
                       Navigator.pushAndRemoveUntil(
@@ -87,14 +91,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   
                   const SizedBox(height: 24),
-                  const Row(
+                  Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.black12)),
+                      Expanded(child: Divider(color: isDark ? Colors.white12 : Colors.black12)),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('or', style: TextStyle(color: Colors.black38)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('or', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38)),
                       ),
-                      Expanded(child: Divider(color: Colors.black12)),
+                      Expanded(child: Divider(color: isDark ? Colors.white12 : Colors.black12)),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -111,8 +115,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor: isDark ? Colors.white : Colors.black,
+                        foregroundColor: isDark ? Colors.black : Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -130,22 +134,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Don't have an account? ",
-                        style: TextStyle(color: Colors.black54),
+                        style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                          );
-                        },
-                        child: const Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -160,7 +171,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Container(
               color: Colors.black.withOpacity(0.3),
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.black),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
         ],
@@ -173,11 +184,13 @@ class _SocialButton extends StatelessWidget {
   final Widget icon;
   final String label;
   final VoidCallback onPressed;
+  final bool isDark;
 
   const _SocialButton({
     required this.icon,
     required this.label,
     required this.onPressed,
+    required this.isDark,
   });
 
   @override
@@ -188,7 +201,7 @@ class _SocialButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.black12),
+          side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -200,8 +213,8 @@ class _SocialButton extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),

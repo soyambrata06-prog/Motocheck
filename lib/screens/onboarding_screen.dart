@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:provider/provider.dart';
+import '../core/theme_provider.dart';
 import 'welcome_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -46,8 +48,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -125,27 +128,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             // UI Controls
-            _buildUIControls(),
+            _buildUIControls(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildUIControls() {
+  Widget _buildUIControls(BuildContext context) {
+    final theme = Theme.of(context);
     return Stack(
       children: [
         Positioned(
           top: 12,
           right: 20,
-          child: GestureDetector(
-            onTap: _goToWelcome,
-            child: const Text(
-              'Skip',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.black54,
-                fontWeight: FontWeight.w500,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _goToWelcome,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: theme.colorScheme.onSurface.withOpacity(0.54),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ),
           ),
@@ -165,8 +176,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: ElevatedButton(
                     onPressed: _onNext,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.onSurface,
+                      foregroundColor: theme.colorScheme.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -185,9 +196,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 SmoothPageIndicator(
                   controller: _pageController,
                   count: _totalPages,
-                  effect: const WormEffect(
-                    dotColor: Color(0xFFE0E0E0),
-                    activeDotColor: Colors.black,
+                  effect: WormEffect(
+                    dotColor: theme.colorScheme.onSurface.withOpacity(0.1),
+                    activeDotColor: theme.colorScheme.onSurface,
                     dotHeight: 8,
                     dotWidth: 8,
                     spacing: 8,
@@ -223,6 +234,7 @@ class _OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
@@ -231,10 +243,10 @@ class _OnboardingPage extends StatelessWidget {
           const SizedBox(height: 40),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w900,
-              color: Colors.black,
+              color: theme.colorScheme.onSurface,
               height: 1.1,
               letterSpacing: -1,
             ),
@@ -244,16 +256,16 @@ class _OnboardingPage extends StatelessWidget {
             subtitle,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.black.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
               height: 1.5,
               fontWeight: FontWeight.w500,
             ),
           ),
           if (isFeaturePage) ...[
             const SizedBox(height: 30),
-            _buildFeature(Icons.verified_user_rounded, 'Verify Bike Legality'),
-            _buildFeature(Icons.local_police_rounded, 'Police Verification'),
-            _buildFeature(Icons.notification_important_rounded, 'Instant SOS Help'),
+            _buildFeature(context, Icons.verified_user_rounded, 'Verify Bike Legality'),
+            _buildFeature(context, Icons.local_police_rounded, 'Police Verification'),
+            _buildFeature(context, Icons.notification_important_rounded, 'Instant SOS Help'),
           ],
           
           const Spacer(),
@@ -295,19 +307,20 @@ class _OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeature(IconData icon, String label) {
+  Widget _buildFeature(BuildContext context, IconData icon, String label) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.black),
+          Icon(icon, size: 20, color: theme.colorScheme.onSurface.withOpacity(0.7)),
           const SizedBox(width: 10),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: theme.colorScheme.onSurface.withOpacity(0.87),
             ),
           ),
         ],
@@ -324,21 +337,22 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
-            color: Colors.black,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.black.withOpacity(0.5),
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
             fontWeight: FontWeight.w600,
           ),
         ),

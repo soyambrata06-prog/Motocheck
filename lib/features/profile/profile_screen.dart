@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme_provider.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/providers/user_provider.dart';
 import '../../screens/welcome_screen.dart';
 import 'edit_profile_screen.dart';
+import 'notification_settings_screen.dart';
+import 'help_support_screen.dart';
+import 'privacy_screen.dart';
+import 'about_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,36 +21,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isDarkMode = false;
 
   void _onSignOut(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        surfaceTintColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Sign Out',
-          style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black),
+          style: TextStyle(fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to log out from MotoCheck?',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'No',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black, fontWeight: FontWeight.bold),
             ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context); // Close dialog
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-                (route) => false,
-              );
+              await authService.signOut();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              }
             },
             child: const Text(
               'Yes',
@@ -59,14 +70,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final userProvider = Provider.of<UserProvider>(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      backgroundColor: themeProvider.isDarkMode ? theme.scaffoldBackgroundColor : const Color(0xFFF8F9FA),
+      body: RepaintBoundary(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -77,269 +91,222 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 80),
                 
-                // Profile & QR Card (High-Fidelity Cyber-Emerald)
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      // Atmospheric Outer Glow
-                      BoxShadow(
-                        color: const Color(0xFF20C997).withOpacity(isDark ? 0.18 : 0.08),
-                        blurRadius: 35,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Container(
-                      padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                        // High-Fidelity Gradient (Brighter Midnight Emerald)
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark 
-                            ? [const Color(0xFF162420), const Color(0xFF0D1512), const Color(0xFF1A2B26)]
-                            : [Colors.white, const Color(0xFFFAFAFA), Colors.white],
+                // Profile & QR Card with Dual Overlapping Elements
+                RepaintBoundary(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: theme.colorScheme.onSurface.withOpacity(0.05),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        border: Border.all(
-                          color: const Color(0xFF20C997).withOpacity(isDark ? 0.35 : 0.2),
-                          width: 1.5,
+                        padding: const EdgeInsets.fromLTRB(22, 90, 22, 22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userProvider.displayName,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: theme.colorScheme.onSurface,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildLightInfoRow(
+                                context, Icons.phone_outlined, userProvider.phoneNumber, iconColor: const Color(0xFF448AFF)),
+                            _buildLightInfoRow(
+                                context, Icons.email_outlined, userProvider.email, iconColor: const Color(0xFFFFAB40)),
+                            _buildLightInfoRow(context, Icons.location_on_outlined,
+                                userProvider.location, iconColor: const Color(0xFFFF5252)),
+                            _buildLightInfoRow(
+                                context, Icons.verified_user_outlined, 'KYC Verified', isVerified: true, iconColor: const Color(0xFF00C853)),
+                          ],
                         ),
                       ),
-                      child: Stack(
-                        children: [
-                          // Subtle internal light flare
-                          if (isDark)
+                      // DP floating out (Left)
+                      Positioned(
+                        top: -55,
+                        left: 22,
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 130,
+                              height: 130,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                image: DecorationImage(
+                                  image: NetworkImage(userProvider.profileImageUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                                border: Border.all(
+                                  color: theme.scaffoldBackgroundColor,
+                                  width: 4,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                            ),
                             Positioned(
-                              top: -60,
-                              right: -60,
-                              child: Container(
-                                width: 180,
-                                height: 180,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: const Color(0xFF20C997).withOpacity(0.04),
+                              bottom: 0,
+                              right: 0,
+                              child: Material(
+                                color: theme.colorScheme.onSurface,
+                                shape: const CircleBorder(),
+                                clipBehavior: Clip.antiAlias,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                                    );
+                                  },
+                                  splashColor: theme.colorScheme.surface.withOpacity(0.1),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(7),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.1), width: 1.5),
+                                    ),
+                                    child: Icon(Icons.edit, color: theme.colorScheme.surface, size: 16),
+                                  ),
                                 ),
                               ),
                             ),
-                          IntrinsicHeight(
-                            child: Row(
-                              children: [
-                                // Left Side: Profile Info
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Stack(
-                                        children: [
-                                          Container(
-                                            width: 80,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
-                                              borderRadius: BorderRadius.circular(20),
-                                              border: Border.all(
-                                                color: isDark ? const Color(0xFF20C997).withOpacity(0.2) : Colors.black.withOpacity(0.05),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: Icon(
-                                              Icons.person_rounded,
-                                              color: isDark ? const Color(0xFF20C997).withOpacity(0.4) : Colors.black26,
-                                              size: 40,
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: -2,
-                                            right: -2,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                                                );
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6),
-                                                decoration: BoxDecoration(
-                                                  color: isDark ? const Color(0xFF162420) : Colors.white,
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(color: const Color(0xFF20C997), width: 1.5),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: const Color(0xFF20C997).withOpacity(0.2),
-                                                      blurRadius: 8,
-                                                    )
-                                                  ],
-                                                ),
-                                                child: const Icon(Icons.edit, color: Color(0xFF20C997), size: 14),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Soyambrata Nayak',
-                                        style: TextStyle(
-                                          fontSize: 19,
-                                          fontWeight: FontWeight.w900,
-                                          color: isDark ? Colors.white : Colors.black,
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      _buildLightInfoRow(Icons.phone_outlined, '+91 98765 43210', isDark),
-                                      _buildLightInfoRow(Icons.email_outlined, 'soyamb@example.com', isDark),
-                                      _buildLightInfoRow(Icons.location_on_outlined, 'Bhubaneswar, Odisha', isDark),
-                                    ],
-                                  ),
-                                ),
-                                
-                                // Clean Vertical Divider
-                                Container(
-                                  width: 1.5,
-                                  margin: const EdgeInsets.symmetric(horizontal: 14),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        const Color(0xFF20C997).withOpacity(0),
-                                        const Color(0xFF20C997).withOpacity(isDark ? 0.3 : 0.1),
-                                        const Color(0xFF20C997).withOpacity(0),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                
-                                // Right Side: QR Code
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(18),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF20C997).withOpacity(0.15),
-                                              blurRadius: 15,
-                                            )
-                                          ],
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(
-                                            'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OR01-202300456789&color=000000',
-                                            height: 95,
-                                            width: 95,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 14),
-                                      Text(
-                                        'DL: OR01 20230045678',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w900,
-                                          color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
-                                          letterSpacing: 0.6,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Driving Licence',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? const Color(0xFF20C997).withOpacity(0.7) : Colors.black45,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF20C997).withOpacity(0.12),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: const Color(0xFF20C997).withOpacity(0.4),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: const [
-                                            Icon(Icons.verified_user_rounded, color: Color(0xFF20C997), size: 14),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              'VERIFIED',
-                                              style: TextStyle(
-                                                color: Color(0xFF20C997),
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w900,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                          ],
+                        ),
+                      ),
+                      // QR Code floating out (Right)
+                      Positioned(
+                        top: -55,
+                        right: 22,
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: theme.scaffoldBackgroundColor,
+                              width: 4,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image.network(
+                              'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OR01-202300456789&color=000000',
+                              fit: BoxFit.contain,
+                              color: theme.colorScheme.onSurface,
+                              colorBlendMode: BlendMode.srcIn,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 
-                const SizedBox(height: 30),
+                const SizedBox(height: 35),
                 Text(
                   'Settings',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 15),
                 
                 // Settings List
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
+                Material(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 0,
                   child: Column(
                     children: [
-                      _buildSettingsTile(Icons.notifications_none_rounded, 'Notifications', isDark),
-                      _buildThemeTile(themeProvider),
-                      _buildSettingsTile(Icons.headset_mic_outlined, 'Help & Support', isDark),
-                      _buildSettingsTile(Icons.verified_user_outlined, 'Privacy', isDark),
-                      _buildSettingsTile(Icons.info_outline_rounded, 'About', isDark, isLast: true),
+                      _buildSettingsTile(
+                        context,
+                        Icons.notifications_none_rounded, 
+                        'Notifications', 
+                        iconColor: const Color(0xFF7C4DFF), // Purple
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                          );
+                        },
+                      ),
+                      _buildThemeTile(context, themeProvider),
+                      _buildSettingsTile(
+                        context,
+                        Icons.headset_mic_outlined, 
+                        'Help & Support', 
+                        iconColor: const Color(0xFF00C853), // Green
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+                          );
+                        },
+                      ),
+                      _buildSettingsTile(
+                        context,
+                        Icons.verified_user_outlined, 
+                        'Privacy', 
+                        iconColor: const Color(0xFF448AFF), // Blue
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PrivacyScreen()),
+                          );
+                        },
+                      ),
+                      _buildSettingsTile(
+                        context,
+                        Icons.info_outline_rounded, 
+                        'About', 
+                        isLast: true,
+                        iconColor: const Color(0xFFFFAB40), // Orange
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AboutScreen()),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -381,24 +348,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
-  Widget _buildLightInfoRow(IconData icon, String text, bool isDark) {
+  Widget _buildLightInfoRow(BuildContext context, IconData icon, String text, {bool isVerified = false, required Color iconColor}) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
+      padding: const EdgeInsets.only(bottom: 10.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: isDark ? Colors.white38 : Colors.black38),
-          const SizedBox(width: 8),
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white54 : Colors.black54,
-                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: isVerified ? iconColor : theme.colorScheme.onSurface.withOpacity(0.54),
+                fontWeight: isVerified ? FontWeight.bold : FontWeight.w500,
               ),
             ),
           ),
@@ -407,97 +375,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildGlowInfoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF20C997).withOpacity(0.7)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withOpacity(0.8),
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: Colors.black54),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsTile(IconData icon, String title, bool isDark, {bool isLast = false}) {
+  Widget _buildSettingsTile(BuildContext context, IconData icon, String title, {VoidCallback? onTap, bool isLast = false, required Color iconColor}) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          leading: Icon(icon, color: isDark ? Colors.white : Colors.black, size: 26),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 22),
+          ),
           title: Text(
             title,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
             ),
           ),
-          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: isDark ? Colors.white54 : Colors.black),
-          onTap: () {},
+          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withOpacity(0.3)),
+          onTap: onTap,
+          splashColor: theme.colorScheme.onSurface.withOpacity(0.08),
+          hoverColor: theme.colorScheme.onSurface.withOpacity(0.04),
         ),
         if (!isLast)
-          Divider(height: 1, thickness: 1, color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[50], indent: 60),
+          Divider(height: 1, thickness: 1, color: theme.colorScheme.onSurface.withOpacity(0.05), indent: 60),
       ],
     );
   }
 
-  Widget _buildThemeTile(ThemeProvider themeProvider) {
+  Widget _buildThemeTile(BuildContext context, ThemeProvider themeProvider) {
+    final theme = Theme.of(context);
     final isDarkMode = themeProvider.isDarkMode;
+    final Color iconColor = isDarkMode ? const Color(0xFFFFD740) : const Color(0xFFFFAB40);
     return Column(
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-          leading: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return RotationTransition(
-                turns: animation,
-                child: FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(scale: animation, child: child),
-                ),
-              );
-            },
-            child: Icon(
-              isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_outlined,
-              key: ValueKey(isDarkMode ? 'dark_icon' : 'light_icon'),
-              color: isDarkMode ? Colors.white : Colors.black,
-              size: 26,
+          onTap: () => themeProvider.toggleTheme(!isDarkMode),
+          splashColor: theme.colorScheme.onSurface.withOpacity(0.08),
+          hoverColor: theme.colorScheme.onSurface.withOpacity(0.04),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: Icon(
+                isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+                key: ValueKey(isDarkMode ? 'dark_icon' : 'light_icon'),
+                color: iconColor,
+                size: 22,
+              ),
             ),
           ),
           title: Text(
@@ -505,7 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           trailing: GestureDetector(
@@ -513,15 +448,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               themeProvider.toggleTheme(!isDarkMode);
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 600),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
               width: 80,
               height: 38,
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: isDarkMode ? const Color(0xFF1A1B1E) : Colors.black.withOpacity(0.08),
+                color: isDarkMode ? const Color(0xFF1A1B1E) : theme.colorScheme.onSurface.withOpacity(0.08),
                 border: Border.all(
-                  color: isDarkMode ? Colors.white10 : Colors.black12,
+                  color: theme.colorScheme.onSurface.withOpacity(0.1),
                   width: 1,
                 ),
               ),
@@ -533,10 +469,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(left: 7),
                       child: AnimatedScale(
-                        duration: const Duration(milliseconds: 400),
+                        duration: const Duration(milliseconds: 300),
                         scale: isDarkMode ? 0.7 : 1.0,
                         child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 300),
                           opacity: isDarkMode ? 0.4 : 1.0,
                           child: Icon(
                             Icons.wb_sunny_rounded,
@@ -553,10 +489,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(right: 7),
                       child: AnimatedScale(
-                        duration: const Duration(milliseconds: 400),
+                        duration: const Duration(milliseconds: 300),
                         scale: isDarkMode ? 1.0 : 0.7,
                         child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 300),
                           opacity: isDarkMode ? 1.0 : 0.2,
                           child: Icon(
                             Icons.nightlight_round,
@@ -570,18 +506,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   
                   // Sliding Glowing Indicator
                   AnimatedAlign(
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.elasticOut,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutBack,
                     alignment: isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isDarkMode ? Colors.white : Colors.black,
+                        color: theme.colorScheme.onSurface,
                         boxShadow: [
                           BoxShadow(
-                            color: isDarkMode ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.3),
+                            color: theme.colorScheme.onSurface.withOpacity(0.3),
                             blurRadius: 12,
                             spreadRadius: 1,
                           )
@@ -589,10 +525,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Center(
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 300),
                           transitionBuilder: (child, anim) {
-                            return RotationTransition(
-                              turns: anim,
+                            return FadeTransition(
+                              opacity: anim,
                               child: ScaleTransition(scale: anim, child: child),
                             );
                           },
@@ -600,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_rounded,
                             key: ValueKey(isDarkMode),
                             size: 16,
-                            color: isDarkMode ? Colors.black : Colors.white,
+                            color: theme.colorScheme.surface,
                           ),
                         ),
                       ),
@@ -611,7 +547,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
-        Divider(height: 1, thickness: 1, color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey[50], indent: 60),
+        Divider(height: 1, thickness: 1, color: theme.colorScheme.onSurface.withOpacity(0.05), indent: 60),
       ],
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme_provider.dart';
+import '../../core/providers/user_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -18,10 +19,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Soyambrata Nayak');
-    _phoneController = TextEditingController(text: '+91 98765 43210');
-    _emailController = TextEditingController(text: 'soyamb@example.com');
-    _locationController = TextEditingController(text: 'Bhubaneswar, Odisha');
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _nameController = TextEditingController(text: userProvider.displayName);
+    _phoneController = TextEditingController(text: userProvider.phoneNumber);
+    _emailController = TextEditingController(text: userProvider.email);
+    _locationController = TextEditingController(text: userProvider.location);
   }
 
   @override
@@ -36,11 +38,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final userProvider = Provider.of<UserProvider>(context);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black),
@@ -63,34 +66,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // Avatar section
             Center(
               child: Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Container(
                     width: 120,
                     height: 120,
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(30),
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                       border: Border.all(
-                        color: const Color(0xFF20C997).withOpacity(0.5),
-                        width: 2,
+                        color: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
+                        width: 4,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      Icons.person_rounded,
-                      size: 60,
-                      color: isDark ? Colors.white24 : Colors.black26,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(26),
+                      child: Image.network(
+                        userProvider.profileImageUrl,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF20C997),
-                        shape: BoxShape.circle,
+                    bottom: -8,
+                    right: -8,
+                    child: Material(
+                      color: isDark ? Colors.black : Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 4,
+                      shadowColor: Colors.black.withOpacity(0.3),
+                      child: InkWell(
+                        onTap: () {},
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: isDark ? Colors.white24 : Colors.black12,
+                                width: 1.5),
+                          ),
+                          child: Icon(Icons.camera_alt_rounded,
+                              color: isDark ? Colors.white : Colors.black,
+                              size: 20),
+                        ),
                       ),
-                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
                     ),
                   ),
                 ],
@@ -112,13 +140,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  // Save logic here
-                  Navigator.pop(context);
+                onPressed: () async {
+                  await userProvider.updateProfile(
+                    name: _nameController.text,
+                    phone: _phoneController.text,
+                    email: _emailController.text,
+                    location: _locationController.text,
+                  );
+                  if (mounted) Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  backgroundColor: isDark ? Colors.white : Colors.black,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -164,7 +197,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: const Color(0xFF20C997), size: 22),
+              prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black38, size: 22),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
