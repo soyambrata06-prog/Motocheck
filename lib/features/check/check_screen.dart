@@ -75,10 +75,14 @@ class _CheckScreenState extends State<CheckScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bool isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        setState(() {
+          _showManufacturers = false;
+        });
+      },
       child: Scaffold(
         backgroundColor: isDark ? Colors.black : Colors.white,
         body: RepaintBoundary(
@@ -116,6 +120,11 @@ class _CheckScreenState extends State<CheckScreen> {
                         focusNode: _focusNode,
                         onChanged: _onSearchChanged,
                         onSubmitted: _handleSearch,
+                        onTap: () {
+                          setState(() {
+                            _showManufacturers = true;
+                          });
+                        },
                         textAlignVertical: TextAlignVertical.center, // Vertically centered
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black,
@@ -153,8 +162,25 @@ class _CheckScreenState extends State<CheckScreen> {
                       ),
                     ),
                   ),
-                  if (_showManufacturers && !_isSearching && isKeyboardVisible) 
-                    _buildManufacturerDialog(isDark),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    reverseDuration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeOutQuart,
+                    switchOutCurve: Curves.easeInQuad,
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1.0,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: ((_showManufacturers || _focusNode.hasFocus) && !_isSearching)
+                        ? _buildManufacturerDialog(isDark)
+                        : const SizedBox.shrink(key: ValueKey('dialog_hidden')),
+                  ),
                   const SizedBox(height: 30),
                   Text(
                     'Quick Actions',
@@ -204,19 +230,25 @@ class _CheckScreenState extends State<CheckScreen> {
 
     if (bikeProvider.isLoading) {
       return Container(
+        key: const ValueKey('dialog_loading'),
         margin: const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF121212) : Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white : Colors.black,
+            width: 4.0,
+          ),
         ),
         child: const Center(child: CircularProgressIndicator(color: Color(0xFF00C853))),
       );
     }
 
     return Container(
+      key: const ValueKey('dialog_content'),
       margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 450),
+      constraints: const BoxConstraints(maxHeight: 320, minHeight: 180),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF121212) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -225,11 +257,11 @@ class _CheckScreenState extends State<CheckScreen> {
           width: 4.0, // Match search bar outline
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Heading
-          if (_searchController.text.isEmpty)
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Padding(
               padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
               child: Text(
@@ -241,48 +273,98 @@ class _CheckScreenState extends State<CheckScreen> {
                 ),
               ),
             ),
-          Flexible(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: _searchController.text.isEmpty 
-                ? ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: bikeProvider.manufacturers.length,
-                    itemBuilder: (context, index) {
-                      final company = bikeProvider.manufacturers[index];
-                      return Theme(
-                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          key: Key('${company.id}_${company.isExpanded}'), // Changing key forces rebuild
-                          initiallyExpanded: company.isExpanded,
-                          onExpansionChanged: (expanded) {
-                            if (expanded) {
-                              setState(() {
-                                for (var m in bikeProvider.manufacturers) {
-                                  m.isExpanded = (m.id == company.id);
-                                }
-                              });
-                            } else {
-                              setState(() {
-                                company.isExpanded = false;
-                              });
-                            }
-                          },
-                          iconColor: isDark ? Colors.white : Colors.black,
-                          collapsedIconColor: isDark ? Colors.white54 : Colors.black54,
-                          title: Text(
-                            company.name,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.bold,
+            Flexible(
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: _searchController.text.isEmpty 
+                  ? ListView.builder(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                      padding: EdgeInsets.zero,
+                      itemCount: bikeProvider.manufacturers.length,
+                      itemBuilder: (context, index) {
+                        final company = bikeProvider.manufacturers[index];
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            dividerColor: Colors.transparent,
+                            expansionTileTheme: ExpansionTileThemeData(
+                              backgroundColor: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
                             ),
                           ),
-                          children: company.bikes.map((bike) => ListTile(
+                          child: ExpansionTile(
+                            key: Key('${company.id}_${company.isExpanded}'),
+                            initiallyExpanded: company.isExpanded,
+                            onExpansionChanged: (expanded) {
+                              setState(() {
+                                for (var m in bikeProvider.manufacturers) {
+                                  m.isExpanded = (m.id == company.id) ? expanded : false;
+                                }
+                              });
+                            },
+                            iconColor: isDark ? Colors.white : Colors.black,
+                            collapsedIconColor: isDark ? Colors.white54 : Colors.black54,
+                            title: Text(
+                              company.name,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            children: company.bikes.map((bike) => ListTile(
+                              leading: Icon(
+                                bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                                color: isDark ? Colors.white54 : Colors.black54,
+                                size: 20,
+                              ),
+                              title: Text(
+                                bike.name,
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                              ),
+                              onTap: () {
+                                _searchController.text = bike.name;
+                                _focusNode.unfocus();
+                                setState(() {
+                                  _showManufacturers = false;
+                                });
+                                _handleSearch(bike.name);
+                              },
+                            )).toList(),
+                          ),
+                        );
+                      },
+                    )
+                  : _filteredBikes.isEmpty 
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.search_off_rounded, color: Colors.grey[400], size: 48),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No bikes found',
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        padding: EdgeInsets.zero,
+                        itemCount: _filteredBikes.length,
+                        itemBuilder: (context, index) {
+                          final bike = _filteredBikes[index];
+                          return ListTile(
                             leading: Icon(
                               bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
                               color: isDark ? Colors.white54 : Colors.black54,
-                              size: 20,
                             ),
                             title: Text(
                               bike.name,
@@ -291,44 +373,18 @@ class _CheckScreenState extends State<CheckScreen> {
                             onTap: () {
                               _searchController.text = bike.name;
                               _focusNode.unfocus();
+                              setState(() {
+                                  _showManufacturers = false;
+                              });
                               _handleSearch(bike.name);
                             },
-                          )).toList(),
-                        ),
-                      );
-                    },
-                  )
-                : _filteredBikes.isEmpty 
-                  ? const Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text('No bikes found', style: TextStyle(color: Colors.grey)),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      itemCount: _filteredBikes.length,
-                      itemBuilder: (context, index) {
-                        final bike = _filteredBikes[index];
-                        return ListTile(
-                          leading: Icon(
-                            bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
-                            color: isDark ? Colors.white54 : Colors.black54,
-                          ),
-                          title: Text(
-                            bike.name,
-                            style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                          ),
-                          onTap: () {
-                            _searchController.text = bike.name;
-                            _focusNode.unfocus();
-                            _handleSearch(bike.name);
-                          },
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

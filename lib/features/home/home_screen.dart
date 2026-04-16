@@ -96,7 +96,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _buildActivityTile(context, isDark, 'Legality Scan', 'Tangerang', '2 hours ago'),
               const SizedBox(height: 12),
-              _buildActivityTile(context, isDark, 'SOS Alert', 'Depok', 'Yesterday'),
+              _buildActivityTile(context, isDark, 'Security Alert', 'Depok', 'Yesterday'),
               const SizedBox(height: 120), // Extra space to scroll past the floating nav
             ],
           ),

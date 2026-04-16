@@ -36,7 +36,7 @@ class IntroScreen2 extends StatelessWidget {
               const SizedBox(height: 16),
               _buildFeatureRow(Icons.security, 'Simple Police Check', 'Struggles sass land bar imesbers.'),
               const SizedBox(height: 16),
-              _buildFeatureRow(Icons.emergency, 'Instant SOS Help', 'Seed special pleho soess.'),
+              _buildFeatureRow(Icons.emergency, 'Instant Security Help', 'Seed special pleho soess.'),
               const Spacer(),
               Center(
                 child: Image.asset(

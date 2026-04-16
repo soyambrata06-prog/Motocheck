@@ -263,7 +263,7 @@ class _OnboardingPage extends StatelessWidget {
             const SizedBox(height: 30),
             _buildFeature(context, Icons.verified_user_rounded, 'Verify Bike Legality'),
             _buildFeature(context, Icons.local_police_rounded, 'Police Verification'),
-            _buildFeature(context, Icons.notification_important_rounded, 'Instant SOS Help'),
+            _buildFeature(context, Icons.notification_important_rounded, 'Instant Security Help'),
           ],
           
           const Spacer(),

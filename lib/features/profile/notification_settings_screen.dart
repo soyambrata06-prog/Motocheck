@@ -44,13 +44,13 @@ class NotificationSettingsScreen extends StatelessWidget {
               children: [
                 _buildToggleTile(
                   'Crash Detection Alerts',
-                  'Auto-detect accidents and trigger SOS',
+                  'Auto-detect accidents and trigger SECURE',
                   notificationProvider.getSetting('crashDetection'),
                   (v) => notificationProvider.updateSetting('crashDetection', v),
                   isDark,
                 ),
                 _buildToggleTile(
-                  'SOS Notifications',
+                  'Security Notifications',
                   'Notify emergency contacts with your live location',
                   notificationProvider.getSetting('sosNotifications'),
                   (v) => notificationProvider.updateSetting('sosNotifications', v),

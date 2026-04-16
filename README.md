@@ -1,14 +1,14 @@
 # MotoCheck 🏍️
 
-MotoCheck is a high-fidelity Flutter application designed for motorcycle enthusiasts to verify bike legality, monitor exhaust decibel levels, and access emergency SOS services. The app features a premium Black and White UI.
+MotoCheck is a high-fidelity Flutter application designed for motorcycle enthusiasts to verify bike legality, monitor exhaust decibel levels, and access emergency SECURE services. The app features a premium Black and White UI.
 
 ## 🚀 Features
 
 - **Legality Check**: Verify if a bike's modifications are within legal limits.
-- **SOS System**: Quick access to emergency services and roadside assistance.
+- **SECURE System**: Quick access to emergency services and roadside assistance.
 - **Decibel Meter**: Measure exhaust noise levels in real-time.
 - **Premium UI**: Clean, high-contrast Black and White design with smooth animations.
-- **Multi-Tab Navigation**: Seamlessly switch between Home, Check, SOS, and Profile.
+- **Multi-Tab Navigation**: Seamlessly switch between Home, Check, SECURE, and Profile.
 
 ## 🛠️ Tech Stack
 
@@ -63,7 +63,7 @@ lib/
 │   ├── onboarding/ # Intro screens
 │   ├── home/       # Dashboard
 │   ├── check/      # Legality & Decibel check
-│   └── sos/        # Emergency services
+│   └── sos/        # SECURE services
 ├── routes/         # Navigation config
 └── shared/         # Common widgets
 ```

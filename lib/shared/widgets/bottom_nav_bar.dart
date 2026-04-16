@@ -30,9 +30,9 @@ class CustomBottomNavBar extends StatelessWidget {
           label: 'Check',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.emergency_outlined),
-          activeIcon: Icon(Icons.emergency),
-          label: 'SOS',
+          icon: Icon(Icons.security_outlined),
+          activeIcon: Icon(Icons.security),
+          label: 'SECURE',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),

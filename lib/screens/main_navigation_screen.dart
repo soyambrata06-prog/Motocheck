@@ -187,7 +187,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       switch (index) {
                         case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
                         case 1: icon = Icons.search_rounded; label = 'SEARCH'; break;
-                        case 2: icon = Icons.notifications_active_rounded; label = 'SOS'; break; // Changed icon
+                        case 2: icon = Icons.security_rounded; label = 'SECURE'; break; // Changed from SOS to SECURE
                         case 3: icon = Icons.person_rounded; label = 'ME'; break;
                         default: icon = Icons.home_rounded; label = '';
                       }
@@ -256,7 +256,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       child: Opacity(
                         opacity: textOpacity,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
+                          padding: const EdgeInsets.only(left: 4.0),
                           child: Text(
                             label,
                             maxLines: 1,
