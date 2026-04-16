@@ -1,9 +1,15 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:torch_light/torch_light.dart';
 import '../models/emergency_contact.dart';
 
 class SosProvider with ChangeNotifier {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isSirenActive = false;
+  bool _isStrobeActive = false;
+  
   List<EmergencyContact> _contacts = [];
   bool _isLoading = true;
   bool _isCrashDetectionEnabled = false;
@@ -21,10 +27,60 @@ class SosProvider with ChangeNotifier {
   String get sosMessage => _sosMessage;
   bool get isSharingLocation => _isSharingLocation;
   DateTime? get lastLocationShared => _lastLocationShared;
+  bool get isSirenActive => _isSirenActive;
+  bool get isStrobeActive => _isStrobeActive;
 
   SosProvider() {
     _loadSettings();
     _loadContacts();
+    _setupAudio();
+  }
+
+  Future<void> _setupAudio() async {
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.setSource(AssetSource('audio/siren.mp3'));
+  }
+
+  Future<void> toggleSiren() async {
+    if (_isSirenActive) {
+      await _audioPlayer.stop();
+    } else {
+      try {
+        await _audioPlayer.resume();
+      } catch (e) {
+        // Handle case where file might be missing or other audio errors
+        debugPrint("Error playing siren: $e");
+      }
+    }
+    _isSirenActive = !_isSirenActive;
+    notifyListeners();
+  }
+
+  Future<void> toggleStrobe() async {
+    if (_isStrobeActive) {
+      try {
+        await TorchLight.disableTorch();
+      } catch (e) {
+        debugPrint("Error disabling torch: $e");
+      }
+    } else {
+      try {
+        await TorchLight.enableTorch();
+      } catch (e) {
+        debugPrint("Error enabling torch: $e");
+      }
+    }
+    _isStrobeActive = !_isStrobeActive;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    if (_isStrobeActive) {
+      TorchLight.disableTorch();
+    }
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {

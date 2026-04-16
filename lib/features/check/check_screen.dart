@@ -95,10 +95,21 @@ class _CheckScreenState extends State<CheckScreen> {
                 children: [
                   const SizedBox(height: 60),
                   Text(
-                    'Search',
+                    'DATABASE',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 11,
                       fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'SEARCH',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                       color: isDark ? Colors.white : Colors.black,
                     ),
                   ),

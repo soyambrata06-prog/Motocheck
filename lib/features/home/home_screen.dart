@@ -113,18 +113,21 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hello,',
+              'HELLO,',
               style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.w500,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+                color: isDark ? Colors.white38 : Colors.black38,
               ),
             ),
+            const SizedBox(height: 4),
             Text(
-              userProvider.displayName.split(' ')[0],
+              userProvider.displayName.split(' ')[0].toUpperCase(),
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -134,10 +137,14 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF00C853).withOpacity(0.5), width: 2),
+            border: Border.all(
+              color: const Color(0xFF00C853).withOpacity(0.5), 
+              width: 2,
+            ),
           ),
           child: CircleAvatar(
             radius: 25,
+            backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
             backgroundImage: NetworkImage(userProvider.profileImageUrl),
           ),
         ),

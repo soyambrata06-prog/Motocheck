@@ -88,11 +88,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 60),
               // Header
               Text(
-                'Profile',
+                'ACCOUNT',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.onSurface,
+                  letterSpacing: 1.5,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'PROFILE',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 30),
