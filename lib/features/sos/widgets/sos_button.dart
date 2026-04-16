@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import '../../../core/providers/sos_provider.dart';
 
 class SosButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -8,11 +11,17 @@ class SosButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sosProvider = Provider.of<SosProvider>(context);
+    final isSosActive = sosProvider.isSosActive;
+
     return RepaintBoundary(
       child: GestureDetector(
-        onTap: onPressed,
-        onLongPress: () {
-          Feedback.forLongPress(context);
+        onTap: isSosActive ? () {
+          HapticFeedback.heavyImpact();
+          sosProvider.stopSos();
+        } : onPressed,
+        onLongPress: isSosActive ? null : () {
+          HapticFeedback.heavyImpact();
           onLongPress();
         },
         child: Container(
@@ -20,12 +29,12 @@ class SosButton extends StatelessWidget {
           height: 220,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: RadialGradient(
+            gradient: const RadialGradient(
               colors: [
-                const Color(0xFFFF5252), // Bright Red
-                const Color(0xFFD32F2F), // Darker Red
+                Color(0xFFFF5252), // Bright Red
+                Color(0xFFD32F2F), // Darker Red
               ],
-              center: const Alignment(-0.2, -0.2),
+              center: Alignment(-0.2, -0.2),
               radius: 0.8,
             ),
             boxShadow: [
@@ -57,13 +66,13 @@ class SosButton extends StatelessWidget {
                   ),
                 ),
               ),
-              // SOS Text
+              // SOS / Stop Text
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'SOS',
-                    style: TextStyle(
+                  Text(
+                    isSosActive ? 'STOP' : 'SOS',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 48,
                       fontWeight: FontWeight.w900,
@@ -78,7 +87,7 @@ class SosButton extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'EMERGENCY',
+                    isSosActive ? 'SAFE NOW?' : 'EMERGENCY',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 12,

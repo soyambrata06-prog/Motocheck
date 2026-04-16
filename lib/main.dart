@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/theme_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/user_provider.dart';
@@ -14,12 +15,28 @@ import 'core/services/auth_service.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
+    
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    
+    runApp(const MotoCheckAppWrapper());
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    debugPrint('Critical Firebase Initialization Error: $e');
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(child: Text('Firebase Initialization Failed: $e')),
+      ),
+    ));
   }
-  runApp(
-    MultiProvider(
+}
+
+class MotoCheckAppWrapper extends StatelessWidget {
+  const MotoCheckAppWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
@@ -29,8 +46,8 @@ void main() async {
         Provider(create: (_) => AuthService()),
       ],
       child: const MotoCheckApp(),
-    ),
-  );
+    );
+  }
 }
 
 class MotoCheckApp extends StatelessWidget {

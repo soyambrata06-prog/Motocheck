@@ -1,29 +1,60 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/theme_provider.dart';
 import '../../core/providers/sos_provider.dart';
 import '../../core/models/emergency_contact.dart';
-import '../shared/widgets/skeleton_tile.dart';
 import 'widgets/sos_button.dart';
+import '../shared/widgets/skeleton_tile.dart';
+
+class PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.length < 4) {
+      return const TextEditingValue(
+        text: '+91 ',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+    }
+    
+    final text = newValue.text.substring(4).replaceAll(RegExp(r'\D'), '');
+    String formatted = '+91 ';
+    for (int i = 0; i < text.length && i < 10; i++) {
+      if (i == 5) formatted += ' ';
+      formatted += text[i];
+    }
+    
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class EmojiFilter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final filtered = newValue.text.replaceAll(RegExp(r'[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]', unicode: true), '');
+    return newValue.copyWith(text: filtered, selection: TextSelection.collapsed(offset: filtered.length));
+  }
+}
 
 class SosScreen extends StatelessWidget {
   const SosScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
     final sosProvider = Provider.of<SosProvider>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: RepaintBoundary(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -62,51 +93,66 @@ class SosScreen extends StatelessWidget {
                       ),
                       child: IconButton(
                         icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
-                        onPressed: () => _showSettingsDialog(context, sosProvider),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          _showSettingsDialog(context, sosProvider);
+                        },
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Main SOS Area with a subtle background container
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                      width: 1.5,
+                _InteractiveTile(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Long press to trigger SOS')),
+                    );
+                  },
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    _showSosConfirmation(context, sosProvider);
+                  },
+                  borderRadius: BorderRadius.circular(32),
+                  splashColor: Colors.red.withOpacity(0.08),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      SosButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Long press to trigger SOS')),
-                          );
-                        },
-                        onLongPress: () {
-                          _showSosConfirmation(context);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'PRESS AND HOLD FOR EMERGENCY',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                          color: isDark ? Colors.white38 : Colors.black38,
+                    child: Column(
+                      children: [
+                        SosButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Long press to trigger SOS')),
+                            );
+                          },
+                          onLongPress: () {
+                            HapticFeedback.heavyImpact();
+                            _showSosConfirmation(context, sosProvider);
+                          },
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        Text(
+                          'PRESS AND HOLD FOR EMERGENCY',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                
                 Text(
                   'Security Controls',
                   style: TextStyle(
@@ -115,10 +161,10 @@ class SosScreen extends StatelessWidget {
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(height: 8),
-                // 2x2 Grid for toggles and tools
+                const SizedBox(height: 12),
                 GridView.count(
                   shrinkWrap: true,
+                  padding: EdgeInsets.zero,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
                   mainAxisSpacing: 10,
@@ -164,8 +210,7 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -178,7 +223,10 @@ class SosScreen extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => _showAddContactDialog(context, sosProvider),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _showAddContactDialog(context, sosProvider);
+                      },
                       icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
                       label: Text(
                         'ADD',
@@ -191,9 +239,8 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 _buildContactsList(context, sosProvider, isDark),
-                
                 const SizedBox(height: 15),
                 Text(
                   'Nearby Help',
@@ -206,16 +253,15 @@ class SosScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospital')),
+                    _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
                     const SizedBox(width: 10),
-                    Expanded(child: _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police')),
+                    _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
                     const SizedBox(width: 10),
-                    Expanded(child: _buildServiceCard(context, 'Ambulance', Icons.emergency_rounded, isDark, 'ambulance')),
+                    _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
                   ],
                 ),
                 const SizedBox(height: 100),
               ],
-
             ),
           ),
         ),
@@ -223,11 +269,12 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildFeatureToggle(BuildContext context, String title, bool value, Color activeColor, Function(bool) onToggle, bool isDark, {String? subtitle, IconData? icon}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    return GestureDetector(
+    return _InteractiveTile(
       onTap: () => onToggle(!value),
+      borderRadius: BorderRadius.circular(24),
+      splashColor: activeColor.withOpacity(0.1),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
@@ -284,52 +331,51 @@ class SosScreen extends StatelessWidget {
 
   Widget _buildToolCard(BuildContext context, String title, IconData icon, bool isDark, VoidCallback onTap, {bool isActive = false, Color activeColor = const Color(0xFF00C853)}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? activeColor.withOpacity(0.08) : primaryColor.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isActive ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05), 
-              width: 1.5
+    return _InteractiveTile(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      splashColor: (isActive ? activeColor : primaryColor).withOpacity(0.1),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor.withOpacity(0.08) : primaryColor.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isActive ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05), 
+            width: 1.5
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 24),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title, 
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800, 
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isActive ? 'RUNNING' : 'STANDBY',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                  )
+                ),
+              ],
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 24),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title, 
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800, 
-                      color: isDark ? Colors.white : Colors.black
-                    )
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isActive ? 'RUNNING' : 'STANDBY',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
-                    )
-                  ),
-                ],
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -346,81 +392,182 @@ class SosScreen extends StatelessWidget {
       );
     }
     
-    if (sosProvider.contacts.isEmpty) {
-      return _buildEmptyState(isDark, 'No emergency contacts added.');
-    }
-
-    return Column(
-      children: sosProvider.contacts.map((contact) => Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: _buildContactTile(context, contact, isDark, sosProvider),
-      )).toList(),
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOutCubic,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: sosProvider.contacts.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.people_outline_rounded, size: 48, color: (isDark ? Colors.white : Colors.black).withOpacity(0.1)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No emergency contacts added',
+                      style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: sosProvider.contacts.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                return _buildContactTile(context, sosProvider.contacts[index], isDark, sosProvider);
+              },
+            ),
+      ),
     );
   }
 
   Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider) {
-    final primaryColor = isDark ? Colors.white : Colors.black;
-    return Container(
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00C853).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person_rounded, color: Color(0xFF00C853), size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return _InteractiveTile(
+      onTap: () => _showAddContactDialog(context, provider, contact: contact),
+      borderRadius: BorderRadius.circular(20),
+      splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        contact.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: primaryColor,
+                      Flexible(
+                        child: Text(
+                          contact.name,
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: isDark ? Colors.white : Colors.black),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        contact.relationship.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                          color: isDark ? Colors.white38 : Colors.black38,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00C853).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            contact.relationship.toUpperCase(),
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF00C853), letterSpacing: 0.5),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    contact.phoneNumber,
+                    style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853)),
+              onPressed: () => _makePhoneCall(contact.phoneNumber),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline_rounded, color: Colors.red[300]),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                final index = provider.contacts.indexOf(contact);
+                if (index != -1) {
+                  provider.removeContactAt(index, (c, animation) => const SizedBox.shrink());
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
+
+  Widget _buildServiceCard(BuildContext context, String title, IconData icon, bool isDark, String query) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    return Expanded(
+      child: AspectRatio(
+        aspectRatio: 1.0,
+        child: _InteractiveTile(
+          onTap: () => _launchMaps(query),
+          borderRadius: BorderRadius.circular(24),
+          splashColor: primaryColor.withOpacity(0.1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: primaryColor.withOpacity(0.03),
+              border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 20, color: primaryColor),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853)),
-                      onPressed: () {},
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                      onPressed: () => provider.removeContact(contact.id),
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    color: primaryColor,
+                    letterSpacing: -0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'VIEW MAP',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ],
             ),
@@ -430,86 +577,18 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, String title, IconData icon, bool isDark, String query) {
-    final primaryColor = isDark ? Colors.white : Colors.black;
-    return AspectRatio(
-      aspectRatio: 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          color: primaryColor.withOpacity(0.03),
-          border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _launchMaps(query),
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(icon, size: 20, color: primaryColor),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                      color: primaryColor,
-                      letterSpacing: 0.1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'VIEW MAP',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _launchMaps(String query) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=$query+near+me';
+    final queryEncoded = Uri.encodeComponent('$query near me');
+    final url = 'https://www.google.com/maps/search/?api=1&query=$queryEncoded';
     if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
     }
   }
 
-  Widget _buildEmptyState(bool isDark, String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Text(
-          message,
-          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
-        ),
-      ),
-    );
-  }
-
-  void _showSosConfirmation(BuildContext context) {
+  void _showSosConfirmation(BuildContext context, SosProvider sosProvider) {
     int countdown = 5;
     
     showModalBottomSheet(
@@ -524,7 +603,7 @@ class SosScreen extends StatelessWidget {
               setModalState(() => countdown--);
             } else if (countdown == 0 && context.mounted) {
               Navigator.pop(context);
-              _triggerSosAction(context);
+              _triggerSosAction(context, sosProvider);
             }
           });
 
@@ -569,7 +648,10 @@ class SosScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      Navigator.pop(context);
+                    },
                     child: const Text('CANCEL (I\'M SAFE)', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
                   ),
                 ),
@@ -581,7 +663,8 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  void _triggerSosAction(BuildContext context) {
+  void _triggerSosAction(BuildContext context, SosProvider provider) {
+    provider.triggerSos();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Security Alert Sent! Contacts notified.'),
@@ -624,86 +707,75 @@ class SosScreen extends StatelessWidget {
                         width: 1.5,
                       ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Safety Settings',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'SOS MESSAGE',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: messageController,
-                          maxLines: 3,
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                            contentPadding: const EdgeInsets.all(16),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildSettingsToggle('Auto-Call Contacts', provider.isAutoCallEnabled, provider.toggleAutoCall, isDark),
-                        const SizedBox(height: 16),
-                        Text(
-                          'CRASH SENSITIVITY',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: const Color(0xFF00C853),
-                            inactiveTrackColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                            thumbColor: const Color(0xFF00C853),
-                            overlayColor: const Color(0xFF00C853).withOpacity(0.2),
-                          ),
-                          child: Slider(
-                            value: provider.crashSensitivity,
-                            onChanged: (v) => provider.updateCrashSensitivity(v),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDark ? Colors.white : Colors.black,
-                                  foregroundColor: isDark ? Colors.black : Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  elevation: 0,
-                                ),
-                                onPressed: () {
-                                  provider.updateSosMessage(messageController.text);
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w900)),
-                              ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Safety Settings',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : Colors.black,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 24),
+                          _buildStyledField(
+                            messageController, 
+                            'SOS MESSAGE', 
+                            Icons.message_outlined, 
+                            isDark, 
+                            maxLines: 3
+                          ),
+                          const SizedBox(height: 20),
+                          _buildSettingsToggle('Auto-Call Contacts', provider.isAutoCallEnabled, provider.toggleAutoCall, isDark),
+                          const SizedBox(height: 16),
+                          Text(
+                            'CRASH SENSITIVITY',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                              color: isDark ? Colors.white38 : Colors.black38,
+                            ),
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: const Color(0xFF00C853),
+                              inactiveTrackColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                              thumbColor: const Color(0xFF00C853),
+                              overlayColor: const Color(0xFF00C853).withOpacity(0.2),
+                            ),
+                            child: Slider(
+                              value: provider.crashSensitivity,
+                              onChanged: (v) => provider.updateCrashSensitivity(v),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isDark ? Colors.white : Colors.black,
+                                    foregroundColor: isDark ? Colors.black : Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    elevation: 0,
+                                  ),
+                                  onPressed: () {
+                                    HapticFeedback.mediumImpact();
+                                    provider.updateSosMessage(messageController.text);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w900)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -716,139 +788,329 @@ class SosScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsToggle(String title, bool value, Function(bool) onChanged, bool isDark) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return _InteractiveTile(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onChanged(!value);
+      },
+      borderRadius: BorderRadius.circular(16),
+      splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            Transform.scale(
+              scale: 0.8,
+              child: Switch.adaptive(
+                value: value,
+                onChanged: (v) {
+                  HapticFeedback.selectionClick();
+                  onChanged(v);
+                },
+                activeColor: const Color(0xFF00C853),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddContactDialog(BuildContext context, SosProvider provider, {EmergencyContact? contact}) {
+    final nameController = TextEditingController(text: contact?.name);
+    final phoneController = TextEditingController(
+      text: contact?.phoneNumber ?? '+91 ',
+    );
+    final relationController = TextEditingController(text: contact?.relationship);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _AddContactDialogContent(
+        contact: contact,
+        provider: provider,
+        isDark: isDark,
+        nameController: nameController,
+        phoneController: phoneController,
+        relationController: relationController,
+      ),
+    );
+  }
+
+  Widget _buildStyledField(TextEditingController controller, String label, IconData icon, bool isDark, {TextInputType? keyboardType, List<TextInputFormatter>? formatters, String? errorText, int maxLines = 1}) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : Colors.black,
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          inputFormatters: formatters,
+          maxLines: maxLines,
+          style: TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: TextStyle(
+              color: primaryColor.withOpacity(0.3),
+              fontWeight: FontWeight.w600,
+            ),
+            prefixIcon: Icon(icon, color: primaryColor, size: 22),
+            filled: true,
+            fillColor: primaryColor.withOpacity(0.04),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: primaryColor.withOpacity(0.05), width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: errorText != null ? Colors.redAccent : primaryColor, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           ),
         ),
-        Switch.adaptive(
-          value: value,
-          onChanged: onChanged,
-          activeColor: const Color(0xFF00C853),
-        ),
+        if (errorText != null) ...[
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: Colors.redAccent, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  errorText,
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
+}
 
-  void _showAddContactDialog(BuildContext context, SosProvider provider) {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final relationController = TextEditingController();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+class _AddContactDialogContent extends StatefulWidget {
+  final EmergencyContact? contact;
+  final SosProvider provider;
+  final bool isDark;
+  final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final TextEditingController relationController;
 
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black.withOpacity(0.5),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
-          child: FadeTransition(
-            opacity: anim1,
-            child: AlertDialog(
-              backgroundColor: Colors.transparent,
-              contentPadding: EdgeInsets.zero,
-              content: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[900]!.withOpacity(0.9) : Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Add Contact',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildStyledField(nameController, 'Full Name', Icons.person_outline, isDark),
-                        const SizedBox(height: 16),
-                        _buildStyledField(phoneController, 'Phone Number', Icons.phone_outlined, isDark),
-                        const SizedBox(height: 16),
-                        _buildStyledField(relationController, 'Relationship', Icons.favorite_outline, isDark),
-                        const SizedBox(height: 30),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text('Cancel', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF00C853),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  elevation: 0,
-                                ),
-                                onPressed: () {
-                                  if (nameController.text.isNotEmpty && phoneController.text.isNotEmpty) {
-                                    provider.addContact(EmergencyContact(
-                                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                                      name: nameController.text,
-                                      phoneNumber: phoneController.text,
-                                      relationship: relationController.text,
-                                    ));
-                                    Navigator.pop(context);
-                                  }
-                                },
-                                child: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+  const _AddContactDialogContent({
+    this.contact,
+    required this.provider,
+    required this.isDark,
+    required this.nameController,
+    required this.phoneController,
+    required this.relationController,
+  });
+
+  @override
+  State<_AddContactDialogContent> createState() => _AddContactDialogContentState();
+}
+
+class _AddContactDialogContentState extends State<_AddContactDialogContent> {
+  String? nameError;
+  String? phoneError;
+  String? relationError;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: widget.isDark ? Colors.black : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border.all(
+            color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+            const SizedBox(height: 24),
+            Text(
+              widget.contact == null ? 'Add Emergency Contact' : 'Edit Contact',
+              style: TextStyle(
+                fontSize: 24, fontWeight: FontWeight.w900,
+                color: widget.isDark ? Colors.white : Colors.black,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const SosScreen()._buildStyledField(
+              widget.nameController, 
+              'Full Name', 
+              Icons.person_outline, 
+              widget.isDark, 
+              errorText: nameError, 
+              formatters: [EmojiFilter()]
+            ),
+            const SizedBox(height: 16),
+            const SosScreen()._buildStyledField(
+              widget.phoneController, 
+              'Phone Number', 
+              Icons.phone_outlined, 
+              widget.isDark, 
+              keyboardType: TextInputType.phone,
+              formatters: [PhoneNumberFormatter()],
+              errorText: phoneError,
+            ),
+            const SizedBox(height: 16),
+            const SosScreen()._buildStyledField(
+              widget.relationController, 
+              'Relationship', 
+              Icons.favorite_outline, 
+              widget.isDark, 
+              errorText: relationError,
+              formatters: [FilteringTextInputFormatter.deny(RegExp(r'[\u0080-\uffff]'))],
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.pop(context);
+                    },
+                    child: Text('CANCEL', style: TextStyle(color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.5), fontWeight: FontWeight.w900)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.isDark ? Colors.white : Colors.black,
+                      foregroundColor: widget.isDark ? Colors.black : Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                    ),
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      final name = widget.nameController.text.trim();
+                      final phone = widget.phoneController.text.trim();
+                      final relation = widget.relationController.text.trim();
+
+                      setState(() {
+                        nameError = name.isEmpty ? 'Name is required' : null;
+                        phoneError = phone.length < 14 ? 'Valid phone is required' : null;
+                        
+                        if (relation.isEmpty) {
+                          relationError = 'Relationship is required';
+                        } else if (RegExp(r'[\u0080-\uffff]').hasMatch(relation)) {
+                          relationError = 'Emojis are not allowed in Relationship';
+                        } else {
+                          relationError = null;
+                        }
+                      });
+
+                      if (nameError != null || phoneError != null || relationError != null) return;
+
+                      final newContact = EmergencyContact(
+                        id: widget.contact?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                        name: name,
+                        phoneNumber: phone,
+                        relationship: relation,
+                      );
+                      
+                      if (widget.contact == null) {
+                        widget.provider.addContact(newContact);
+                      } else {
+                        widget.provider.updateContact(newContact);
+                      }
+                      Navigator.pop(context);
+                    },
+                    child: Text(widget.contact == null ? 'ADD CONTACT' : 'SAVE CHANGES', style: const TextStyle(fontWeight: FontWeight.w900)),
+                  ),
+                ),
+              ],
+            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
 
-  Widget _buildStyledField(TextEditingController controller, String label, IconData icon, bool isDark) {
-    return TextField(
-      controller: controller,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: const Color(0xFF00C853), size: 20),
-        filled: true,
-        fillColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+class _InteractiveTile extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final BorderRadius borderRadius;
+  final Color splashColor;
+
+  const _InteractiveTile({
+    required this.child,
+    required this.onTap,
+    this.onLongPress,
+    required this.borderRadius,
+    required this.splashColor,
+  });
+
+  @override
+  State<_InteractiveTile> createState() => _InteractiveTileState();
+}
+
+class _InteractiveTileState extends State<_InteractiveTile> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _isPressed ? 0.96 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeOutCubic,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          onHighlightChanged: (v) => setState(() => _isPressed = v),
+          borderRadius: widget.borderRadius,
+          splashFactory: InkRipple.splashFactory,
+          splashColor: widget.splashColor,
+          highlightColor: Colors.transparent,
+          child: widget.child,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }

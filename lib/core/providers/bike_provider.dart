@@ -39,7 +39,7 @@ class Manufacturer {
 }
 
 class BikeProvider extends ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
   List<Manufacturer> _manufacturers = [];
   bool _isLoading = false;
 

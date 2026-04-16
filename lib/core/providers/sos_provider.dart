@@ -27,6 +27,7 @@ class SosProvider with ChangeNotifier {
   static const double _gravity = 9.81;
   static const int _cooldownMs = 5000;
   DateTime? _lastDetectionTime;
+  final GlobalKey<AnimatedListState> listKey = GlobalKey<AnimatedListState>();
 
   List<EmergencyContact> get contacts => _contacts;
   bool get isLoading => _isLoading;
@@ -47,6 +48,35 @@ class SosProvider with ChangeNotifier {
     });
     _loadContacts();
     _setupAudio();
+  }
+
+  bool _isSosActive = false;
+  Timer? _sosTimer;
+
+  bool get isSosActive => _isSosActive;
+
+  Future<void> triggerSos() async {
+    _isSosActive = true;
+    
+    // Enable all security controls when SOS is triggered
+    if (!_isSirenActive) await toggleSiren();
+    if (!_isStrobeActive) await toggleStrobe();
+    if (!_isSharingLocation) toggleLocationSharing();
+    if (!_isCrashDetectionEnabled) await toggleCrashDetection(true);
+    
+    notifyListeners();
+  }
+
+  Future<void> stopSos() async {
+    _isSosActive = false;
+    
+    // Disable all security controls
+    if (_isSirenActive) await toggleSiren();
+    if (_isStrobeActive) await toggleStrobe();
+    if (_isSharingLocation) toggleLocationSharing();
+    if (_isCrashDetectionEnabled) await toggleCrashDetection(false);
+    
+    notifyListeners();
   }
 
   Future<void> _setupAudio() async {
@@ -200,13 +230,33 @@ class SosProvider with ChangeNotifier {
   Future<void> addContact(EmergencyContact contact) async {
     _contacts.add(contact);
     await _saveContacts();
+    listKey.currentState?.insertItem(_contacts.length - 1);
     notifyListeners();
   }
 
-  Future<void> removeContact(String id) async {
-    _contacts.removeWhere((c) => c.id == id);
-    await _saveContacts();
-    notifyListeners();
+  Future<void> updateContact(EmergencyContact contact) async {
+    final index = _contacts.indexWhere((c) => c.id == contact.id);
+    if (index != -1) {
+      _contacts[index] = contact;
+      await _saveContacts();
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeContactAt(int index, Widget Function(EmergencyContact contact, Animation<double> animation) removedItemBuilder) async {
+    if (index >= 0 && index < _contacts.length) {
+      final removedContact = _contacts[index];
+      
+      listKey.currentState?.removeItem(
+        index,
+        (context, animation) => removedItemBuilder(removedContact, animation),
+        duration: const Duration(milliseconds: 300),
+      );
+      
+      _contacts.removeAt(index);
+      await _saveContacts();
+      notifyListeners();
+    }
   }
 
   Future<void> _saveContacts() async {
