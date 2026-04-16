@@ -87,7 +87,7 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
         bytes: bytes,
         metadata: InputImageMetadata(
           size: Size(image.width.toDouble(), image.height.toDouble()),
-          rotation: InputImageRotation.rotation90deg, // Adjust based on device
+          rotation: InputImageRotation.rotation90deg,
           format: InputImageFormat.bgra8888,
           bytesPerRow: image.planes[0].bytesPerRow,
         ),
@@ -95,13 +95,13 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
 
       final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
       
-      // Simple regex for Indian Plate (e.g., MH 12 AB 1234)
-      RegExp plateRegex = RegExp(r'[A-Z]{2}\s?[0-9]{2}\s?[A-Z]{1,2}\s?[0-9]{4}');
+      // Simple regex for Indian/International Plate
+      RegExp plateRegex = RegExp(r'[A-Z]{1,3}\s?[0-9]{1,4}\s?[A-Z]{0,3}');
       
       for (TextBlock block in recognizedText.blocks) {
         for (TextLine line in block.lines) {
           final match = plateRegex.firstMatch(line.text.toUpperCase());
-          if (match != null) {
+          if (match != null && match.group(0)!.length > 4) {
             _onPlateDetected(match.group(0)!);
             break;
           }
@@ -121,7 +121,6 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
       _detectedPlate = plate;
     });
 
-    // Feedback and navigation
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         Navigator.pushReplacement(
@@ -158,6 +157,12 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
           CameraPreview(_cameraController!),
           
           // Scanning Overlay UI
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.4),
+            ),
+          ),
+          
           SafeArea(
             child: Column(
               children: [
@@ -178,31 +183,61 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 28),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const Text(
-            'SCAN PLATE',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 2),
-          ),
-          IconButton(
-            icon: Icon(
-              _cameraController!.value.flashMode == FlashMode.torch ? Icons.flash_on : Icons.flash_off,
-              color: Colors.white, 
-              size: 28
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            onPressed: () {
-              setState(() {
-                _cameraController!.setFlashMode(
-                  _cameraController!.value.flashMode == FlashMode.torch ? FlashMode.off : FlashMode.torch
-                );
-              });
-            },
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          Column(
+            children: [
+              Text(
+                'AI VISION',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.38),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Text(
+                'SCANNER',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: IconButton(
+              icon: Icon(
+                _cameraController!.value.flashMode == FlashMode.torch ? Icons.flash_on : Icons.flash_off,
+                color: Colors.white, 
+                size: 20
+              ),
+              onPressed: () {
+                setState(() {
+                  _cameraController!.setFlashMode(
+                    _cameraController!.value.flashMode == FlashMode.torch ? FlashMode.off : FlashMode.torch
+                  );
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -213,10 +248,10 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
     return Center(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
-        height: 140,
+        height: 180,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white24, width: 1),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 2),
         ),
         child: Stack(
           children: [
@@ -225,15 +260,19 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
               animation: _scanAnimation,
               builder: (context, child) {
                 return Positioned(
-                  top: 140 * _scanAnimation.value,
-                  left: 10,
-                  right: 10,
+                  top: 180 * _scanAnimation.value,
+                  left: 20,
+                  right: 20,
                   child: Container(
-                    height: 2,
+                    height: 3,
                     decoration: BoxDecoration(
                       color: const Color(0xFF00C853),
                       boxShadow: [
-                        BoxShadow(color: const Color(0xFF00C853).withOpacity(0.5), blurRadius: 10, spreadRadius: 2),
+                        BoxShadow(
+                          color: const Color(0xFF00C853).withOpacity(0.6),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
                       ],
                     ),
                   ),
@@ -250,14 +289,35 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
 
   Widget _buildStatusText() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
-      child: Text(
-        _detectedPlate != null ? 'Plate Found: $_detectedPlate' : 'Align license plate in frame',
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_detectedPlate == null)
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF00C853),
+              ),
+            ),
+          if (_detectedPlate == null) const SizedBox(width: 12),
+          Text(
+            _detectedPlate != null ? 'PLATE DETECTED' : 'POSITION PLATE IN FRAME',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -266,20 +326,47 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
     return Padding(
       padding: const EdgeInsets.only(bottom: 40),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.black45,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white12),
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.auto_awesome, color: Color(0xFF00C853), size: 20),
-            const SizedBox(width: 12),
-            Text(
-              _detectedPlate != null ? 'Extracting Data...' : 'AI Engine Active',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C853).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.security_rounded, color: Color(0xFF00C853), size: 18),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'SECURE SCAN',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    'Encryption active',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -288,30 +375,30 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
   }
 
   Widget _buildCorner(int index) {
-    const double size = 30;
+    const double size = 40;
     const double thickness = 4;
     const color = Color(0xFF00C853);
     
     return Positioned(
-      top: (index == 0 || index == 1) ? -1 : null,
-      bottom: (index == 2 || index == 3) ? -1 : null,
-      left: (index == 0 || index == 2) ? -1 : null,
-      right: (index == 1 || index == 3) ? -1 : null,
+      top: (index == 0 || index == 1) ? -2 : null,
+      bottom: (index == 2 || index == 3) ? -2 : null,
+      left: (index == 0 || index == 2) ? -2 : null,
+      right: (index == 1 || index == 3) ? -2 : null,
       child: Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           border: Border(
-            top: (index == 0 || index == 1) ? BorderSide(color: color, width: thickness) : BorderSide.none,
-            bottom: (index == 2 || index == 3) ? BorderSide(color: color, width: thickness) : BorderSide.none,
-            left: (index == 0 || index == 2) ? BorderSide(color: color, width: thickness) : BorderSide.none,
-            right: (index == 1 || index == 3) ? BorderSide(color: color, width: thickness) : BorderSide.none,
+            top: (index == 0 || index == 1) ? const BorderSide(color: color, width: thickness) : BorderSide.none,
+            bottom: (index == 2 || index == 3) ? const BorderSide(color: color, width: thickness) : BorderSide.none,
+            left: (index == 0 || index == 2) ? const BorderSide(color: color, width: thickness) : BorderSide.none,
+            right: (index == 1 || index == 3) ? const BorderSide(color: color, width: thickness) : BorderSide.none,
           ),
           borderRadius: BorderRadius.only(
-            topLeft: index == 0 ? const Radius.circular(15) : Radius.zero,
-            topRight: index == 1 ? const Radius.circular(15) : Radius.zero,
-            bottomLeft: index == 2 ? const Radius.circular(15) : Radius.zero,
-            bottomRight: index == 3 ? const Radius.circular(15) : Radius.zero,
+            topLeft: index == 0 ? const Radius.circular(24) : Radius.zero,
+            topRight: index == 1 ? const Radius.circular(24) : Radius.zero,
+            bottomLeft: index == 2 ? const Radius.circular(24) : Radius.zero,
+            bottomRight: index == 3 ? const Radius.circular(24) : Radius.zero,
           ),
         ),
       ),

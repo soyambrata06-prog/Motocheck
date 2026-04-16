@@ -14,12 +14,17 @@ class DecibelIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isOverLimit = decibel > limit;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
+        color: primaryColor.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: primaryColor.withOpacity(0.05),
+          width: 1.5,
+        ),
       ),
       child: Column(
         children: [
@@ -30,53 +35,105 @@ class DecibelIndicator extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Current Noise',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                    'CURRENT NOISE',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
+                    ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     '${decibel.toStringAsFixed(1)} dB',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
-                      color: isOverLimit ? Colors.red : const Color(0xFF00C853),
+                      letterSpacing: -1,
+                      color: isOverLimit ? Colors.redAccent : const Color(0xFF00C853),
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: (isOverLimit ? Colors.red : const Color(0xFF00C853)).withOpacity(0.1),
+                  color: (isOverLimit ? Colors.redAccent : const Color(0xFF00C853)).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: (isOverLimit ? Colors.redAccent : const Color(0xFF00C853)).withOpacity(0.2),
+                  ),
                 ),
                 child: Text(
                   isOverLimit ? 'ILLEGAL' : 'LEGAL',
                   style: TextStyle(
-                    color: isOverLimit ? Colors.red : const Color(0xFF00C853),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    color: isOverLimit ? Colors.redAccent : const Color(0xFF00C853),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: decibel / 120,
-              minHeight: 12,
-              backgroundColor: isDark ? Colors.black : Colors.grey[300],
-              color: isOverLimit ? Colors.red : const Color(0xFF00C853),
-            ),
+          const SizedBox(height: 24),
+          Stack(
+            children: [
+              Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              FractionallySizedBox(
+                widthFactor: (decibel / 120).clamp(0.0, 1.0),
+                child: Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: isOverLimit ? Colors.redAccent : const Color(0xFF00C853),
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isOverLimit ? Colors.redAccent : const Color(0xFF00C853)).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('0 dB', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-              Text('Limit: $limit dB', style: TextStyle(color: Colors.grey[500], fontSize: 11, fontWeight: FontWeight.bold)),
-              Text('120 dB', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+              Text(
+                '0 dB',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
+              ),
+              Text(
+                'LIMIT: $limit dB',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                  color: isDark ? Colors.white38 : Colors.black38,
+                ),
+              ),
+              Text(
+                '120 dB',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
+              ),
             ],
           ),
         ],
@@ -84,4 +141,3 @@ class DecibelIndicator extends StatelessWidget {
     );
   }
 }
-

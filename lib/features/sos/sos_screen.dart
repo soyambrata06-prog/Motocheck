@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../core/theme_provider.dart';
 import '../../core/providers/sos_provider.dart';
 import '../../core/models/emergency_contact.dart';
 import '../shared/widgets/skeleton_tile.dart';
@@ -11,7 +13,8 @@ class SosScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
     final sosProvider = Provider.of<SosProvider>(context);
 
     return Scaffold(
@@ -24,7 +27,7 @@ class SosScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 50),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -64,131 +67,155 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 25),
-                Center(
-                  child: SosButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Long press to trigger SOS')),
-                      );
-                    },
-                    onLongPress: () {
-                      _showSosConfirmation(context);
-                    },
+                const SizedBox(height: 20),
+                // Main SOS Area with a subtle background container
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      SosButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Long press to trigger SOS')),
+                          );
+                        },
+                        onLongPress: () {
+                          _showSosConfirmation(context);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'PRESS AND HOLD FOR EMERGENCY',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 
-                // Crash Detection & Location Sharing
-                Row(
+                Text(
+                  'Security Controls',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // 2x2 Grid for toggles and tools
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.3,
                   children: [
-                    Expanded(
-                      child: _buildFeatureToggle(
-                        context, 
-                        'Crash Detection', 
-                        sosProvider.isCrashDetectionEnabled, 
-                        const Color(0xFF00C853),
-                        (v) => sosProvider.toggleCrashDetection(v),
-                        isDark
-                      ),
+                    _buildFeatureToggle(
+                      context, 
+                      'Crash Detection', 
+                      sosProvider.isCrashDetectionEnabled, 
+                      const Color(0xFFF04770),
+                      (v) => sosProvider.toggleCrashDetection(v),
+                      isDark,
+                      icon: Icons.sensors_rounded,
                     ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: _buildFeatureToggle(
-                        context, 
-                        'Live Location', 
-                        sosProvider.isSharingLocation, 
-                        const Color(0xFF00C853),
-                        (_) => sosProvider.toggleLocationSharing(),
-                        isDark,
-                        subtitle: sosProvider.isSharingLocation ? 'Sharing...' : 'Off'
-                      ),
+                    _buildFeatureToggle(
+                      context, 
+                      'Live Location', 
+                      sosProvider.isSharingLocation, 
+                      const Color(0xFFF78C6A),
+                      (_) => sosProvider.toggleLocationSharing(),
+                      isDark,
+                      icon: Icons.location_on_rounded,
+                      subtitle: sosProvider.isSharingLocation ? 'Sharing' : null
+                    ),
+                    _buildToolCard(
+                      context, 
+                      'Siren', 
+                      sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
+                      isDark, 
+                      () => sosProvider.toggleSiren(),
+                      isActive: sosProvider.isSirenActive,
+                      activeColor: const Color(0xFFFFD167),
+                    ),
+                    _buildToolCard(
+                      context, 
+                      'Strobe', 
+                      sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
+                      isDark, 
+                      () => sosProvider.toggleStrobe(),
+                      isActive: sosProvider.isStrobeActive,
+                      activeColor: const Color(0xFF06D7A0),
                     ),
                   ],
                 ),
                 
-                const SizedBox(height: 30),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Emergency Contacts',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.add, color: isDark ? Colors.white : Colors.black),
+                    TextButton.icon(
                       onPressed: () => _showAddContactDialog(context, sosProvider),
+                      icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
+                      label: Text(
+                        'ADD',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 8),
                 _buildContactsList(context, sosProvider, isDark),
                 
-                const SizedBox(height: 30),
-                Text(
-                  'Alert Tools',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
                 const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildToolCard(
-                        context, 
-                        'Siren', 
-                        sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
-                        isDark, 
-                        () => sosProvider.toggleSiren(),
-                        isActive: sosProvider.isSirenActive,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildToolCard(
-                        context, 
-                        'Strobe', 
-                        sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
-                        isDark, 
-                        () => sosProvider.toggleStrobe(),
-                        isActive: sosProvider.isStrobeActive,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
                 Text(
                   'Nearby Help',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w900,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(height: 15),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  clipBehavior: Clip.none,
-                  child: Row(
-                    children: [
-                      _buildServiceCard(context, 'Hospitals', Icons.local_hospital_outlined, isDark),
-                      const SizedBox(width: 15),
-                      _buildServiceCard(context, 'Police', Icons.policy_outlined, isDark),
-                      const SizedBox(width: 15),
-                      _buildServiceCard(context, 'Ambulance', Icons.emergency_share_outlined, isDark),
-                    ],
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospital')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildServiceCard(context, 'Ambulance', Icons.emergency_rounded, isDark, 'ambulance')),
+                  ],
                 ),
-                const SizedBox(height: 120),
+                const SizedBox(height: 100),
               ],
+
             ),
           ),
         ),
@@ -196,85 +223,67 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureToggle(BuildContext context, String title, bool value, Color activeColor, Function(bool) onToggle, bool isDark, {String? subtitle}) {
+
+  Widget _buildFeatureToggle(BuildContext context, String title, bool value, Color activeColor, Function(bool) onToggle, bool isDark, {String? subtitle, IconData? icon}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: value 
-          ? activeColor.withOpacity(0.08) 
-          : (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: value ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05),
-          width: 1.5,
+    return GestureDetector(
+      onTap: () => onToggle(!value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: value 
+            ? activeColor.withOpacity(0.08) 
+            : (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: value ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : primaryColor.withOpacity(0.3), size: 24),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : Colors.black,
+                    height: 1.2,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 24,
-                width: 44,
-                child: Switch.adaptive(
-                  value: value,
-                  onChanged: onToggle,
-                  activeColor: activeColor,
-                  activeTrackColor: activeColor.withOpacity(0.3),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle, 
-                  color: value ? activeColor : (isDark ? Colors.white24 : Colors.black.withOpacity(0.24)),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  subtitle ?? (value ? 'ACTIVE' : 'DISABLED'),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle ?? (value ? 'ACTIVE' : 'OFF'),
                   style: TextStyle(
-                    fontSize: 11, 
-                    fontWeight: FontWeight.w700,
+                    fontSize: 10, 
+                    fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
-                    color: value ? activeColor : (isDark ? Colors.white38 : Colors.black38)
+                    color: value ? activeColor : (isDark ? Colors.white24 : Colors.black26)
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildToolCard(BuildContext context, String title, IconData icon, bool isDark, VoidCallback onTap, {bool isActive = false}) {
+  Widget _buildToolCard(BuildContext context, String title, IconData icon, bool isDark, VoidCallback onTap, {bool isActive = false, Color activeColor = const Color(0xFF00C853)}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    final activeColor = const Color(0xFF00C853);
     
     return Material(
       color: Colors.transparent,
@@ -282,27 +291,42 @@ class SosScreen extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? activeColor.withOpacity(0.1) : primaryColor.withOpacity(0.03),
+            color: isActive ? activeColor.withOpacity(0.08) : primaryColor.withOpacity(0.03),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: isActive ? activeColor.withOpacity(0.3) : primaryColor.withOpacity(0.06), 
+              color: isActive ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05), 
               width: 1.5
             ),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: isActive ? activeColor : primaryColor, size: 30),
-              const SizedBox(height: 12),
-              Text(
-                title.toUpperCase(), 
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900, 
-                  letterSpacing: 1,
-                  color: isActive ? activeColor : primaryColor
-                )
+              Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 24),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title, 
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800, 
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isActive ? 'RUNNING' : 'STANDBY',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                    )
+                  ),
+                ],
               ),
             ],
           ),
@@ -348,7 +372,7 @@ class SosScreen extends StatelessWidget {
           onTap: () {},
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
                 Container(
@@ -406,41 +430,71 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, String title, IconData icon, bool isDark) {
+  Widget _buildServiceCard(BuildContext context, String title, IconData icon, bool isDark, String query) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    return Container(
-      width: 140,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: primaryColor.withOpacity(0.03),
-        border: Border.all(color: primaryColor.withOpacity(0.06), width: 1.5),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 32, color: primaryColor),
-                const SizedBox(height: 14),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    color: primaryColor,
+          color: primaryColor.withOpacity(0.03),
+          border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _launchMaps(query),
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, size: 20, color: primaryColor),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      color: primaryColor,
+                      letterSpacing: 0.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'VIEW MAP',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _launchMaps(String query) async {
+    final url = 'https://www.google.com/maps/search/?api=1&query=$query+near+me';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    }
   }
 
   Widget _buildEmptyState(bool isDark, String message) {

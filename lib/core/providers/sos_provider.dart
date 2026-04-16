@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:torch_light/torch_light.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import '../models/emergency_contact.dart';
 
 class SosProvider with ChangeNotifier {
@@ -19,6 +22,12 @@ class SosProvider with ChangeNotifier {
   bool _isSharingLocation = false;
   DateTime? _lastLocationShared;
 
+  // Crash detection state
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+  static const double _gravity = 9.81;
+  static const int _cooldownMs = 5000;
+  DateTime? _lastDetectionTime;
+
   List<EmergencyContact> get contacts => _contacts;
   bool get isLoading => _isLoading;
   bool get isCrashDetectionEnabled => _isCrashDetectionEnabled;
@@ -31,7 +40,11 @@ class SosProvider with ChangeNotifier {
   bool get isStrobeActive => _isStrobeActive;
 
   SosProvider() {
-    _loadSettings();
+    _loadSettings().then((_) {
+      if (_isCrashDetectionEnabled) {
+        _startCrashDetection();
+      }
+    });
     _loadContacts();
     _setupAudio();
   }
@@ -48,7 +61,6 @@ class SosProvider with ChangeNotifier {
       try {
         await _audioPlayer.resume();
       } catch (e) {
-        // Handle case where file might be missing or other audio errors
         debugPrint("Error playing siren: $e");
       }
     }
@@ -74,9 +86,51 @@ class SosProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void _startCrashDetection() {
+    _accelerometerSubscription?.cancel();
+    _accelerometerSubscription = accelerometerEventStream().listen((AccelerometerEvent event) {
+      _processAccelerometerData(event);
+    });
+  }
+
+  void _stopCrashDetection() {
+    _accelerometerSubscription?.cancel();
+    _accelerometerSubscription = null;
+  }
+
+  void _processAccelerometerData(AccelerometerEvent event) {
+    // Calculate total G-force
+    double gForce = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) / _gravity;
+
+    // Sensitivity logic: 
+    // 0.0 sensitivity = 8G threshold (very hard to trigger)
+    // 1.0 sensitivity = 3G threshold (easier to trigger)
+    double threshold = 8.0 - (_crashSensitivity * 5.0);
+
+    if (gForce > threshold) {
+      final now = DateTime.now();
+      if (_lastDetectionTime == null || now.difference(_lastDetectionTime!).inMilliseconds > _cooldownMs) {
+        _lastDetectionTime = now;
+        _onCrashDetected(gForce);
+      }
+    }
+  }
+
+  void _onCrashDetected(double intensity) {
+    debugPrint("CRASH DETECTED! Intensity: $intensity G");
+    // In a real app, this would trigger a countdown UI
+    // For now, we'll activate safety features if enabled
+    if (!_isSirenActive) toggleSiren();
+    if (!_isStrobeActive) toggleStrobe();
+    
+    // notifyListeners could be used to show an overlay in the UI
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _stopCrashDetection();
     if (_isStrobeActive) {
       TorchLight.disableTorch();
     }
@@ -104,6 +158,11 @@ class SosProvider with ChangeNotifier {
 
   Future<void> toggleCrashDetection(bool value) async {
     _isCrashDetectionEnabled = value;
+    if (_isCrashDetectionEnabled) {
+      _startCrashDetection();
+    } else {
+      _stopCrashDetection();
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('crash_detection', value);
     notifyListeners();

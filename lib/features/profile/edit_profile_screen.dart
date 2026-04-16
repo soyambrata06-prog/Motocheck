@@ -87,165 +87,194 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Edit Profile',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w900,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            // Avatar section
-            Center(
-              child: Stack(
-                clipBehavior: Clip.none,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
-                        width: 4,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(26),
-                      child: Image.network(
-                        userProvider.profileImageUrl,
-                        fit: BoxFit.cover,
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: isDark ? Colors.white : Colors.black,
+                        size: 20,
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: -8,
-                    right: -8,
-                    child: Material(
-                      color: isDark ? Colors.black : Colors.white,
-                      shape: const CircleBorder(),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.3),
-                      child: InkWell(
-                        onTap: () {},
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: isDark ? Colors.white24 : Colors.black12,
-                                width: 1.5),
-                          ),
-                          child: Icon(Icons.camera_alt_rounded,
-                              color: isDark ? Colors.white : Colors.black,
-                              size: 20),
+                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PERSONAL',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                          color: isDark ? Colors.white38 : Colors.black38,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'EDIT PROFILE',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 40),
-            
-            _buildTextField('Full Name', _nameController, Icons.person_outline_rounded, isDark),
-            const SizedBox(height: 20),
-            _buildTextField('Phone Number', _phoneController, Icons.phone_outlined, isDark),
-            const SizedBox(height: 20),
-            _buildTextField('Email Address', _emailController, Icons.email_outlined, isDark),
-            const SizedBox(height: 20),
-            _buildDatePickerField('Date of Birth', _dobController, Icons.calendar_today_outlined, isDark),
-            const SizedBox(height: 20),
-            _buildTextField('Location', _locationController, Icons.location_on_outlined, isDark),
-            
-            const SizedBox(height: 50),
-            
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await userProvider.updateProfile(
-                    name: _nameController.text,
-                    phone: _phoneController.text,
-                    email: _emailController.text,
-                    location: _locationController.text,
-                    dob: _dobController.text,
-                  );
-                  if (mounted) Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? Colors.white : Colors.black,
-                  foregroundColor: isDark ? Colors.black : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+              const SizedBox(height: 35),
+              
+              // Avatar section
+              Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 130,
+                      height: 130,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(userProvider.profileImageUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white : Colors.black,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isDark ? Colors.black : Colors.white,
+                            width: 3,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.camera_alt_rounded,
+                          color: isDark ? Colors.black : Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 40),
+              
+              _buildModernField('Full Name', _nameController, Icons.person_outline_rounded, isDark),
+              const SizedBox(height: 16),
+              _buildModernField('Phone Number', _phoneController, Icons.phone_outlined, isDark),
+              const SizedBox(height: 16),
+              _buildModernField('Email Address', _emailController, Icons.email_outlined, isDark),
+              const SizedBox(height: 16),
+              _buildDatePickerField('Date of Birth', _dobController, Icons.calendar_today_outlined, isDark),
+              const SizedBox(height: 16),
+              _buildModernField('Location', _locationController, Icons.location_on_outlined, isDark),
+              
+              const SizedBox(height: 35),
+              
+              SizedBox(
+                width: double.infinity,
+                height: 64,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await userProvider.updateProfile(
+                      name: _nameController.text,
+                      phone: _phoneController.text,
+                      email: _emailController.text,
+                      location: _locationController.text,
+                      dob: _dobController.text,
+                    );
+                    if (mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'UPDATE PROFILE',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, bool isDark) {
+  Widget _buildModernField(String label, TextEditingController controller, IconData icon, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white70 : Colors.black54,
+        Padding(
+          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
           ),
         ),
-        const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              width: 1,
             ),
           ),
           child: TextField(
             controller: controller,
             style: TextStyle(
               color: isDark ? Colors.white : Colors.black,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
             ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black38, size: 22),
+              prefixIcon: Icon(icon, color: isDark ? Colors.white54 : Colors.black45, size: 20),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
@@ -259,23 +288,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white70 : Colors.black54,
+        Padding(
+          padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
           ),
         ),
-        const SizedBox(height: 10),
         GestureDetector(
           onTap: () => _selectDate(context, isDark),
           child: Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                width: 1,
               ),
             ),
             child: AbsorbPointer(
@@ -283,13 +316,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 controller: controller,
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
                 ),
                 decoration: InputDecoration(
-                  prefixIcon: Icon(icon, color: isDark ? Colors.white70 : Colors.black38, size: 22),
+                  prefixIcon: Icon(icon, color: isDark ? Colors.white54 : Colors.black45, size: 20),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  hintText: 'Select your birth date',
+                  hintText: 'SELECT DATE',
                   hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
                 ),
               ),

@@ -1,18 +1,7 @@
 import 'package:flutter/material.dart';
-
-class Bike {
-  final String name;
-  final bool isScooter;
-  Bike(this.name, {this.isScooter = false});
-}
-
-class Company {
-  final String name;
-  final List<Bike> bikes;
-  bool isExpanded;
-
-  Company(this.name, this.bikes, {this.isExpanded = false});
-}
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../data/models/bike_model.dart';
+import 'bike_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -25,41 +14,44 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
 
-  final List<Company> _companies = [
-    Company('KTM', [
-      Bike('Duke 200'),
-      Bike('Duke 390'),
-      Bike('RC 200'),
-    ]),
-    Company('Royal Enfield', [
-      Bike('Classic 350'),
-      Bike('Hunter 350'),
-      Bike('Meteor 350'),
-    ]),
-    Company('TVS', [
-      Bike('Apache RTR 160'),
-      Bike('Apache RTR 200'),
-      Bike('Ntorq 125', isScooter: true),
-    ]),
-    Company('Bajaj', [
-      Bike('Pulsar NS200'),
-      Bike('Pulsar RS200'),
-      Bike('Pulsar N160'),
-    ]),
-    Company('BMW Motorrad', [
-      Bike('S1000RR'),
-    ]),
+  // Mock data for internal use if provider is not used here
+  final List<Map<String, dynamic>> _mockCompanies = [
+    {
+      'name': 'KAWASAKI',
+      'bikes': [
+        {'name': 'Ninja ZX-10R', 'isScooter': false, 'year': 2023},
+        {'name': 'Z900', 'isScooter': false, 'year': 2022},
+      ]
+    },
+    {
+      'name': 'YAMAHA',
+      'bikes': [
+        {'name': 'R1M', 'isScooter': false, 'year': 2023},
+        {'name': 'MT-09', 'isScooter': false, 'year': 2022},
+        {'name': 'NMAX 155', 'isScooter': true, 'year': 2023},
+      ]
+    },
+    {
+      'name': 'DUCATI',
+      'bikes': [
+        {'name': 'Panigale V4', 'isScooter': false, 'year': 2023},
+        {'name': 'Streetfighter V4', 'isScooter': false, 'year': 2023},
+      ]
+    },
   ];
 
-  List<Bike> _filteredBikes = [];
+  List<Map<String, dynamic>> _filteredBikes = [];
 
   void _onSearchChanged(String query) {
     setState(() {
       _isSearching = query.isNotEmpty;
       if (_isSearching) {
-        _filteredBikes = _companies
-            .expand((c) => c.bikes)
-            .where((b) => b.name.toLowerCase().contains(query.toLowerCase()))
+        _filteredBikes = _mockCompanies
+            .expand((c) => (c['bikes'] as List).map((b) => {
+                  ...Map<String, dynamic>.from(b),
+                  'company': c['name'] as String,
+                }))
+            .where((b) => b['name'].toString().toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
@@ -67,181 +59,285 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-              child: const Text(
-                'Explore Bikes',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            _buildSearchBar(),
-            Expanded(
-              child: _isSearching ? _buildSearchResults() : _buildDirectory(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: TextField(
-        controller: _searchController,
-        onChanged: _onSearchChanged,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Search by bike name...',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
-          filled: true,
-          fillColor: const Color(0xFF1A1A1A),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor, size: 20),
+            onPressed: () => Navigator.pop(context),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 120),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'EXPLORE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                    color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'DATABASE',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 25),
+          _buildSearchBar(isDark),
+          Expanded(
+            child: _isSearching ? _buildSearchResults(isDark) : _buildDirectory(isDark),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(bool isDark) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      child: Container(
+        height: 70,
+        decoration: BoxDecoration(
+          color: primaryColor.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: primaryColor.withOpacity(0.05),
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(
+              color: primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search bike model...',
+              hintStyle: TextStyle(
+                color: primaryColor.withOpacity(0.24),
+                fontWeight: FontWeight.normal,
+              ),
+              prefixIcon: Icon(Icons.search, color: primaryColor.withOpacity(0.38), size: 28),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDirectory() {
+  Widget _buildDirectory(bool isDark) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      physics: const BouncingScrollPhysics(),
       children: [
-        const Text(
+        Text(
           'MANUFACTURERS',
-          style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+          style: TextStyle(
+            color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+          ),
         ),
         const SizedBox(height: 16),
-        ..._companies.map((company) => _buildCompanyAccordion(company)),
+        ..._mockCompanies.map((company) => _buildCompanyAccordion(isDark, company)),
         const SizedBox(height: 100),
       ],
     );
   }
 
-  Widget _buildCompanyAccordion(Company company) {
-    bool hasManyBikes = company.bikes.length > 2;
-    int visibleCount = (company.isExpanded || !hasManyBikes) ? company.bikes.length : 2;
+  Widget _buildCompanyAccordion(bool isDark, Map<String, dynamic> company) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    final bikes = company['bikes'] as List;
 
     return Column(
       children: [
         Theme(
-          data: ThemeData(dividerColor: Colors.transparent),
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            iconColor: Colors.white,
-            collapsedIconColor: Colors.white54,
+            iconColor: primaryColor,
+            collapsedIconColor: primaryColor.withOpacity(0.5),
             title: Text(
-              company.name,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            children: [
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: visibleCount + (hasManyBikes && !company.isExpanded ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == visibleCount && hasManyBikes && !company.isExpanded) {
-                    return TextButton(
-                      onPressed: () => setState(() => company.isExpanded = true),
-                      style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
-                      child: const Text('View More', style: TextStyle(color: Colors.white38, fontSize: 13)),
-                    );
-                  }
-                  final bike = company.bikes[index];
-                  return _buildBikeTile(bike);
-                },
+              company['name'],
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                letterSpacing: 0.5,
               ),
-              const SizedBox(height: 10),
-            ],
+            ),
+            children: bikes.map((bike) => _buildBikeTile(isDark, bike, company['name'])).toList(),
           ),
         ),
-        Divider(color: Colors.white.withOpacity(0.05), height: 1),
+        Divider(color: primaryColor.withOpacity(0.05), height: 1),
       ],
     );
   }
 
-  Widget _buildBikeTile(Bike bike) {
+  Widget _buildBikeTile(bool isDark, Map<String, dynamic> bike, String companyName) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded, color: Colors.white38, size: 18),
-          const SizedBox(width: 12),
-          Text(bike.name, style: const TextStyle(color: Colors.white70, fontSize: 15)),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToDetails(bike, companyName),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+            child: Row(
+              children: [
+                Icon(
+                  bike['isScooter'] ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                  color: primaryColor.withOpacity(0.3),
+                  size: 16,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  bike['name'],
+                  style: TextStyle(
+                    color: primaryColor.withOpacity(0.8),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Icon(Icons.arrow_forward_ios_rounded, color: primaryColor.withOpacity(0.1), size: 12),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(bool isDark) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
     if (_filteredBikes.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 64, color: Colors.white.withOpacity(0.1)),
+            Icon(Icons.search_off_rounded, size: 64, color: primaryColor.withOpacity(0.1)),
             const SizedBox(height: 16),
-            const Text('No results found', style: TextStyle(color: Colors.white38)),
+            Text(
+              'NO RESULTS FOUND',
+              style: TextStyle(
+                color: primaryColor.withOpacity(0.38),
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+                letterSpacing: 1.5,
+              ),
+            ),
           ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      physics: const BouncingScrollPhysics(),
       itemCount: _filteredBikes.length,
-      separatorBuilder: (context, index) => Divider(color: Colors.white.withOpacity(0.05)),
       itemBuilder: (context, index) {
         final bike = _filteredBikes[index];
-        return ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded, color: Colors.white54),
-          title: _buildHighlightedText(bike.name, _searchController.text),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white10, size: 14),
-          onTap: () {
-            // Logic to select bike
-          },
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.03),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  bike['isScooter'] ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                  color: primaryColor.withOpacity(0.3),
+                  size: 18,
+                ),
+              ),
+              title: Text(
+                bike['name'],
+                style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(
+                bike['company'],
+                style: TextStyle(
+                  color: primaryColor.withOpacity(0.38),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              trailing: Icon(Icons.arrow_forward_ios_rounded, color: primaryColor.withOpacity(0.2), size: 14),
+              onTap: () => _navigateToDetails(bike, bike['company']),
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildHighlightedText(String text, String query) {
-    if (query.isEmpty) return Text(text, style: const TextStyle(color: Colors.white));
+  void _navigateToDetails(Map<String, dynamic> bikeData, String companyName) {
+    final bike = BikeModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      plateNumber: 'N/A',
+      make: companyName,
+      model: bikeData['name'],
+      year: bikeData['year'],
+    );
     
-    final matches = query.toLowerCase();
-    final parts = text.split(RegExp(matches, caseSensitive: false));
-
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(color: Colors.white70, fontSize: 16),
-        children: [
-          for (int i = 0; i < parts.length; i++) ...[
-            TextSpan(text: parts[i]),
-            if (i < parts.length - 1)
-              TextSpan(
-                text: text.substring(
-                  parts.sublist(0, i + 1).join().length + (i * query.length),
-                  parts.sublist(0, i + 1).join().length + (i * query.length) + query.length,
-                ),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
-              ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BikeDetailsScreen(
+          bike: bike,
+          specs: const [
+            {'label': 'ENGINE', 'value': '998cc', 'icon': FontAwesomeIcons.motorcycle},
+            {'label': 'POWER', 'value': '203 HP', 'icon': FontAwesomeIcons.bolt},
+            {'label': 'WEIGHT', 'value': '207 kg', 'icon': FontAwesomeIcons.weightHanging},
+            {'label': 'TOP SPEED', 'value': '299 km/h', 'icon': FontAwesomeIcons.gaugeHigh},
           ],
-        ],
+        ),
       ),
     );
   }

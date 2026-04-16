@@ -94,35 +94,39 @@ class _CheckScreenState extends State<CheckScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 60),
-                  Text(
-                    'DATABASE',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'SEARCH',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DATABASE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'SEARCH',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 25),
-                  // Search Bar
                   Container(
                     height: 70, 
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF121212) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: isDark ? Colors.white : Colors.black,
-                        width: 4.0, // Bolder outline 4.0
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                        width: 1.5,
                       ),
                     ),
                     child: Center(
@@ -136,7 +140,7 @@ class _CheckScreenState extends State<CheckScreen> {
                             _showManufacturers = true;
                           });
                         },
-                        textAlignVertical: TextAlignVertical.center, // Vertically centered
+                        textAlignVertical: TextAlignVertical.center,
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black,
                           fontSize: 16,
@@ -145,10 +149,10 @@ class _CheckScreenState extends State<CheckScreen> {
                         decoration: InputDecoration(
                           hintText: 'Search bike model or plate number...',
                           hintStyle: TextStyle(
-                            color: Colors.grey[500],
+                            color: isDark ? Colors.white24 : Colors.black26,
                             fontWeight: FontWeight.normal,
                           ),
-                          prefixIcon: Icon(Icons.search, color: isDark ? Colors.white : Colors.black, size: 28),
+                          prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : Colors.black38, size: 28),
                           suffixIcon: _isSearching
                               ? const Padding(
                                   padding: EdgeInsets.all(12.0),
@@ -401,37 +405,35 @@ class _CheckScreenState extends State<CheckScreen> {
   }
 
   Widget _buildQuickAction(bool isDark, String label, IconData icon) {
-    Color iconColor;
-    if (label == 'History') {
-      iconColor = const Color(0xFFFFD740); // Yellow
-    } else if (label == 'Stats') {
-      iconColor = const Color(0xFF00C853); // Green
-    } else {
-      iconColor = const Color(0xFF448AFF); // Blue (Scan Plate)
-    }
-    
-    return Material(
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          height: 120,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FaIcon(icon, color: iconColor, size: 30),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(24),
+          child: SizedBox(
+            height: 120,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FaIcon(icon, color: primaryColor.withOpacity(0.3), size: 30),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: primaryColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -439,55 +441,64 @@ class _CheckScreenState extends State<CheckScreen> {
   }
 
   Widget _buildRecentSearch(bool isDark, String title, String plate) {
-    return Material(
-      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ResultScreen(),
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ResultScreen(),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: FaIcon(FontAwesomeIcons.motorcycle, color: primaryColor.withOpacity(0.3), size: 20),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: primaryColor,
+                        ),
+                      ),
+                      Text(
+                        plate,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                          color: isDark ? Colors.white24 : Colors.black26,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: primaryColor.withOpacity(0.2)),
+              ],
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00C853).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const FaIcon(FontAwesomeIcons.motorcycle, color: Color(0xFF00C853), size: 20),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    Text(
-                      plate,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[500]),
-            ],
           ),
         ),
       ),

@@ -16,23 +16,25 @@ class SpecCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+        color: primaryColor.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+          color: primaryColor.withOpacity(0.05),
+          width: 1.5,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark ? Colors.black26 : Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              color: primaryColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: FaIcon(icon, size: 14, color: const Color(0xFF00C853)),
           ),
@@ -43,19 +45,21 @@ class SpecCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  label,
+                  label.toUpperCase(),
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[500],
-                    fontWeight: FontWeight.w500,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    color: isDark ? Colors.white38 : Colors.black38,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: primaryColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -67,4 +71,3 @@ class SpecCard extends StatelessWidget {
     );
   }
 }
-

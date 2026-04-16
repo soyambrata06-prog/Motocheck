@@ -16,50 +16,77 @@ class BikeDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      backgroundColor: isDark ? Colors.black : Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Bike Details',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor, size: 20),
+            onPressed: () => Navigator.pop(context),
           ),
         ),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 120),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'DETAILS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'SPECIFICATIONS',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
               BikeCard(bike: bike),
               const SizedBox(height: 30),
               Text(
-                'Technical Specifications',
+                'TECHNICAL SPECIFICATIONS',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
                 ),
               ),
               const SizedBox(height: 15),
               GridView.builder(
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: specs.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 15,
-                  crossAxisSpacing: 15,
-                  childAspectRatio: 2.5,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2.2,
                 ),
                 itemBuilder: (context, index) {
                   final spec = specs[index];
@@ -72,33 +99,61 @@ class BikeDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
               Text(
-                'Description',
+                'DESCRIPTION',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                'This ${bike.year} ${bike.make} ${bike.model} is a high-performance machine designed for precision and speed. It features advanced engineering and a lightweight chassis for superior handling on both street and track.',
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.black87,
-                  height: 1.5,
+              const SizedBox(height: 15),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(
+                    color: primaryColor.withOpacity(0.05),
+                    width: 1.5,
+                  ),
+                ),
+                child: Text(
+                  'This ${bike.year} ${bike.make} ${bike.model} is a high-performance machine designed for precision and speed. It features advanced engineering and a lightweight chassis for superior handling on both street and track.',
+                  style: TextStyle(
+                    color: primaryColor.withOpacity(0.7),
+                    height: 1.6,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
-              SizedBox(
+              Container(
                 width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                height: 64,
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {},
+                    borderRadius: BorderRadius.circular(24),
+                    child: Center(
+                      child: Text(
+                        'ADD TO FAVORITES',
+                        style: TextStyle(
+                          color: isDark ? Colors.black : Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () {},
-                  child: const Text('ADD TO FAVORITES', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 50),

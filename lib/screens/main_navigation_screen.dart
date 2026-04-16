@@ -187,7 +187,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       switch (index) {
                         case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
                         case 1: icon = Icons.search_rounded; label = 'SEARCH'; break;
-                        case 2: icon = Icons.security_rounded; label = 'SECURE'; break; // Changed from SOS to SECURE
+                        case 2: icon = Icons.security_rounded; label = 'SECURE'; break;
                         case 3: icon = Icons.person_rounded; label = 'ME'; break;
                         default: icon = Icons.home_rounded; label = '';
                       }

@@ -21,9 +21,32 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60), // Manual top padding instead of SafeArea
-              _buildHeader(isDark, userProvider),
-              const SizedBox(height: 25),
+                const SizedBox(height: 60),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RIDER STATUS',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'HELLO, ${userProvider.displayName.split(' ')[0].toUpperCase()}',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 25),
               
               // FEATURED CARD: Isolated with RepaintBoundary for theme performance
               RepaintBoundary(
@@ -63,9 +86,9 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            _buildStatItem('Safety Score', '98%', Icons.security_rounded, const Color(0xFFFFD740)),
+                            _buildStatItem('Safety Score', '98%', Icons.security_rounded, Colors.white),
                             const SizedBox(width: 30),
-                            _buildStatItem('Trips', '142', Icons.route_rounded, const Color(0xFF448AFF)),
+                            _buildStatItem('Trips', '142', Icons.route_rounded, Colors.white),
                           ],
                         ),
                       ],
@@ -102,53 +125,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(bool isDark, UserProvider userProvider) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'HELLO,',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
-                color: isDark ? Colors.white38 : Colors.black38,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              userProvider.displayName.split(' ')[0].toUpperCase(),
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-          ],
-        ),
-        Container(
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF00C853).withOpacity(0.5), 
-              width: 2,
-            ),
-          ),
-          child: CircleAvatar(
-            radius: 25,
-            backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-            backgroundImage: NetworkImage(userProvider.profileImageUrl),
-          ),
-        ),
-      ],
     );
   }
 
@@ -210,10 +186,7 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     FaIcon(
                       icon,
-                      color: title == 'Garage' 
-                          ? const Color(0xFFFFAB40) // Amber/Orange
-                          : const Color(0xFF448AFF) // Blue
-                          ,
+                      color: isDark ? Colors.white : Colors.black,
                       size: 24,
                     ),
                     const SizedBox(height: 15),
@@ -234,73 +207,51 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildActivityTile(BuildContext context, bool isDark, String title, String subtitle, String time) {
-    Color iconColor;
-    if (title.contains('Speeding')) {
-      iconColor = const Color(0xFFFF5252); // Red
-    } else if (title.contains('Legality')) {
-      iconColor = const Color(0xFF448AFF); // Blue
-    } else {
-      iconColor = const Color(0xFFFFD740); // Yellow
-    }
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: primaryColor.withOpacity(0.03),
+        border: Border.all(
+          color: primaryColor.withOpacity(0.05),
+          width: 1.2,
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Material(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-            child: InkWell(
-              onTap: () {},
-              splashColor: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-                    width: 1.2,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {},
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 45,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(child: Icon(Icons.history_rounded, color: primaryColor.withOpacity(0.5))),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: primaryColor)),
+                      Text(subtitle,
+                          style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(child: Icon(Icons.history, color: iconColor)),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : Colors.black)),
-                          Text(subtitle,
-                              style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
-                        ],
-                      ),
-                    ),
-                    Text(time, style: TextStyle(color: isDark ? Colors.white38 : Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
+                Text(time, style: TextStyle(color: isDark ? Colors.white38 : Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w500)),
+              ],
             ),
           ),
         ),
