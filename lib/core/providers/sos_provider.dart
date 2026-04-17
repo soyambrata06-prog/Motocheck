@@ -10,6 +10,7 @@ import '../models/emergency_contact.dart';
 
 class SosProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  SharedPreferences? _prefs;
   bool _isSirenActive = false;
   bool _isStrobeActive = false;
   
@@ -41,28 +42,30 @@ class SosProvider with ChangeNotifier {
   bool get isStrobeActive => _isStrobeActive;
 
   SosProvider() {
-    _loadSettings().then((_) {
-      if (_isCrashDetectionEnabled) {
-        _startCrashDetection();
-      }
-    });
-    _loadContacts();
+    _init();
+  }
+
+  Future<void> _init() async {
+    _prefs = await SharedPreferences.getInstance();
+    await _loadSettings();
+    await _loadContacts();
     _setupAudio();
+    if (_isCrashDetectionEnabled) {
+      _startCrashDetection();
+    }
   }
 
   bool _isSosActive = false;
-
   bool get isSosActive => _isSosActive;
 
   Future<void> triggerSos() async {
     if (_isSosActive) return;
     _isSosActive = true;
     
-    // Enable all security controls when SOS is triggered
     await _setSiren(true);
     await _setStrobe(true);
     if (!_isSharingLocation) toggleLocationSharing();
-    if (!_isCrashDetectionEnabled) await toggleCrashDetection(true);
+    if (!_isCrashDetectionEnabled) toggleCrashDetection(true);
     
     notifyListeners();
   }
@@ -71,12 +74,10 @@ class SosProvider with ChangeNotifier {
     if (!_isSosActive) return;
     _isSosActive = false;
     
-    // Disable all security controls
     await _setSiren(false);
     await _setStrobe(false);
     if (_isSharingLocation) toggleLocationSharing();
-    // We might want to keep crash detection enabled if it was enabled before?
-    // But stopSos usually means "I'm safe now, stop everything triggered by SOS"
+    if (_isCrashDetectionEnabled) toggleCrashDetection(false);
     
     notifyListeners();
   }
@@ -101,7 +102,6 @@ class SosProvider with ChangeNotifier {
       _isSirenActive = active;
     } catch (e) {
       debugPrint("Error setting siren to $active: $e");
-      // Force state to false if it fails to start
       if (active) _isSirenActive = false;
     }
   }
@@ -126,7 +126,6 @@ class SosProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Error setting strobe to $active: $e");
-      // Ensure state is false if hardware fails
       _isStrobeActive = false;
     }
   }
@@ -135,7 +134,6 @@ class SosProvider with ChangeNotifier {
     await _setStrobe(!_isStrobeActive);
     notifyListeners();
   }
-
 
   void _startCrashDetection() {
     _accelerometerSubscription?.cancel();
@@ -150,12 +148,7 @@ class SosProvider with ChangeNotifier {
   }
 
   void _processAccelerometerData(AccelerometerEvent event) {
-    // Calculate total G-force
     double gForce = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) / _gravity;
-
-    // Sensitivity logic: 
-    // 0.0 sensitivity = 8G threshold (very hard to trigger)
-    // 1.0 sensitivity = 3G threshold (easier to trigger)
     double threshold = 8.0 - (_crashSensitivity * 5.0);
 
     if (gForce > threshold) {
@@ -169,15 +162,9 @@ class SosProvider with ChangeNotifier {
 
   void _onCrashDetected(double intensity) {
     debugPrint("CRASH DETECTED! Intensity: $intensity G");
-    
-    // Auto-trigger security features on crash
     _setSiren(true);
     _setStrobe(true);
-    
-    if (!_isSharingLocation) {
-      toggleLocationSharing();
-    }
-
+    if (!_isSharingLocation) toggleLocationSharing();
     notifyListeners();
   }
 
@@ -192,22 +179,21 @@ class SosProvider with ChangeNotifier {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isCrashDetectionEnabled = prefs.getBool('crash_detection') ?? false;
-    _isAutoCallEnabled = prefs.getBool('auto_call') ?? true;
-    _crashSensitivity = prefs.getDouble('crash_sensitivity') ?? 0.5;
-    _sosMessage = prefs.getString('sos_message') ?? "I need help! This is an emergency. My location is: ";
+    if (_prefs == null) return;
+    _isCrashDetectionEnabled = _prefs!.getBool('crash_detection') ?? false;
+    _isAutoCallEnabled = _prefs!.getBool('auto_call') ?? true;
+    _crashSensitivity = _prefs!.getDouble('crash_sensitivity') ?? 0.5;
+    _sosMessage = _prefs!.getString('sos_message') ?? "I need help! This is an emergency. My location is: ";
     notifyListeners();
   }
 
   Future<void> _loadContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final contactsJson = prefs.getStringList('emergency_contacts') ?? [];
+    if (_prefs == null) return;
+    final contactsJson = _prefs!.getStringList('emergency_contacts') ?? [];
     _contacts = contactsJson
         .map((item) => EmergencyContact.fromJson(json.decode(item)))
         .toList();
 
-    // Add test contacts if list is empty
     if (_contacts.isEmpty) {
       final testContacts = [
         EmergencyContact(id: '1', name: 'John Doe', phoneNumber: '+91 98765 43210', relationship: 'Father'),
@@ -228,37 +214,33 @@ class SosProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleCrashDetection(bool value) async {
+  void toggleCrashDetection(bool value) {
     _isCrashDetectionEnabled = value;
     if (_isCrashDetectionEnabled) {
       _startCrashDetection();
     } else {
       _stopCrashDetection();
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('crash_detection', value);
     notifyListeners();
+    _prefs?.setBool('crash_detection', value);
   }
 
-  Future<void> toggleAutoCall(bool value) async {
+  void toggleAutoCall(bool value) {
     _isAutoCallEnabled = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('auto_call', value);
     notifyListeners();
+    _prefs?.setBool('auto_call', value);
   }
 
-  Future<void> updateCrashSensitivity(double value) async {
+  void updateCrashSensitivity(double value) {
     _crashSensitivity = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('crash_sensitivity', value);
     notifyListeners();
+    _prefs?.setDouble('crash_sensitivity', value);
   }
 
-  Future<void> updateSosMessage(String message) async {
+  void updateSosMessage(String message) {
     _sosMessage = message;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('sos_message', message);
     notifyListeners();
+    _prefs?.setString('sos_message', message);
   }
 
   void toggleLocationSharing() {
@@ -292,7 +274,7 @@ class SosProvider with ChangeNotifier {
       listKey.currentState?.removeItem(
         index,
         (context, animation) => removedItemBuilder(removedContact, animation),
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 600),
       );
       
       _contacts.removeAt(index);

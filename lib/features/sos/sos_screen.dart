@@ -36,8 +36,16 @@ class PhoneNumberFormatter extends TextInputFormatter {
 class EmojiFilter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final filtered = newValue.text.replaceAll(RegExp(r'[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]', unicode: true), '');
-    return newValue.copyWith(text: filtered, selection: TextSelection.collapsed(offset: filtered.length));
+    // A more comprehensive emoji regex
+    final emojiRegex = RegExp(
+      r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])',
+      unicode: true,
+    );
+    final filtered = newValue.text.replaceAll(emojiRegex, '');
+    return newValue.copyWith(
+      text: filtered,
+      selection: TextSelection.collapsed(offset: filtered.length),
+    );
   }
 }
 
@@ -52,332 +60,305 @@ class SosScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: RepaintBoundary(
-        child: Stack(
-          children: [
-            // Ambient background glows for glass effect depth
-            if (isDark) ...[
-              Positioned(
-                top: -150,
-                right: -100,
-                child: Container(
-                  width: 400,
-                  height: 400,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.red.withOpacity(0.12),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 200,
-                left: -150,
-                child: Container(
-                  width: 500,
-                  height: 500,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.10),
-                  ),
-                ),
-              ),
-            ],
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 50),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 50),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'SECURITY HUB',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                                color: isDark ? Colors.white38 : Colors.black38,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'SECURE',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                                color: isDark ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                              _showSettingsDialog(context, sosProvider);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _InteractiveTile(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Long press to trigger SOS')),
-                        );
-                      },
-                      onLongPress: () {
-                        HapticFeedback.heavyImpact();
-                        _showSosConfirmation(context, sosProvider);
-                      },
-                      borderRadius: BorderRadius.circular(28),
-                      splashColor: Colors.red.withOpacity(0.08),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
-                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                SosButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Long press to trigger SOS')),
-                                    );
-                                  },
-                                  onLongPress: () {
-                                    HapticFeedback.heavyImpact();
-                                    _showSosConfirmation(context, sosProvider);
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'PRESS AND HOLD FOR EMERGENCY',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.5,
-                                    color: isDark ? Colors.white38 : Colors.black38,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Security Controls',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GridView.count(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 1.4,
-                      children: [
-                        _buildFeatureToggle(
-                          context, 
-                          'Crash Detection', 
-                          sosProvider.isCrashDetectionEnabled, 
-                          const Color(0xFFF04770),
-                          (v) => sosProvider.toggleCrashDetection(v),
-                          isDark,
-                          icon: Icons.sensors_rounded,
-                        ),
-                        _buildFeatureToggle(
-                          context, 
-                          'Live Location', 
-                          sosProvider.isSharingLocation, 
-                          const Color(0xFFF78C6A),
-                          (_) => sosProvider.toggleLocationSharing(),
-                          isDark,
-                          icon: Icons.location_on_rounded,
-                          subtitle: sosProvider.isSharingLocation ? 'Sharing' : null
-                        ),
-                        _buildToolCard(
-                          context, 
-                          'Siren', 
-                          sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
-                          isDark, 
-                          () => sosProvider.toggleSiren(),
-                          isActive: sosProvider.isSirenActive,
-                          activeColor: const Color(0xFFFFD167),
-                        ),
-                        _buildToolCard(
-                          context, 
-                          'Strobe', 
-                          sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
-                          isDark, 
-                          () => sosProvider.toggleStrobe(),
-                          isActive: sosProvider.isStrobeActive,
-                          activeColor: const Color(0xFF06D7A0),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Emergency Contacts',
+                          'SECURITY HUB',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : Colors.black,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.white38 : Colors.black38,
                           ),
                         ),
-                        TextButton.icon(
-                          style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                        const SizedBox(height: 4),
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 300),
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: sosProvider.isSosActive 
+                              ? const Color(0xFFFF5252) 
+                              : (isDark ? Colors.white : Colors.black),
                           ),
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            _showAddContactDialog(context, sosProvider);
-                          },
-                          icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
-                          label: Text(
-                            'ADD',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : Colors.black,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) => FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.2),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            ),
+                            child: Text(
+                              sosProvider.isSosActive ? 'ALARM' : 'SECURE',
+                              key: ValueKey(sosProvider.isSosActive),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    _buildContactsList(context, sosProvider, isDark),
-                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          _showSettingsDialog(context, sosProvider);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _InteractiveTile(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Long press to trigger SOS')),
+                    );
+                  },
+                  onLongPress: () {
+                    HapticFeedback.heavyImpact();
+                    _showSosConfirmation(context, sosProvider);
+                  },
+                  borderRadius: BorderRadius.circular(28),
+                  splashColor: Colors.red.withOpacity(0.08),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        SosButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Long press to trigger SOS')),
+                            );
+                          },
+                          onLongPress: () {
+                            HapticFeedback.heavyImpact();
+                            _showSosConfirmation(context, sosProvider);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'PRESS AND HOLD FOR EMERGENCY',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Security Controls',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GridView.count(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 1.4,
+                  children: [
+                    _buildFeatureToggle(
+                      context, 
+                      'Crash Detection', 
+                      sosProvider.isCrashDetectionEnabled, 
+                      const Color(0xFFFF5252),
+                      (v) => sosProvider.toggleCrashDetection(v),
+                      isDark,
+                      icon: Icons.sensors_rounded,
+                    ),
+                    _buildFeatureToggle(
+                      context, 
+                      'Live Location', 
+                      sosProvider.isSharingLocation, 
+                      const Color(0xFFFF9100),
+                      (_) => sosProvider.toggleLocationSharing(),
+                      isDark,
+                      icon: Icons.location_on_rounded,
+                      subtitle: sosProvider.isSharingLocation ? 'Sharing' : null
+                    ),
+                    _buildToolCard(
+                      context, 
+                      'Siren', 
+                      sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
+                      isDark, 
+                      () => sosProvider.toggleSiren(),
+                      isActive: sosProvider.isSirenActive,
+                      activeColor: const Color(0xFFFBC02D),
+                    ),
+                    _buildToolCard(
+                      context, 
+                      'Strobe', 
+                      sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
+                      isDark, 
+                      () => sosProvider.toggleStrobe(),
+                      isActive: sosProvider.isStrobeActive,
+                      activeColor: const Color(0xFF00A37B),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      'Nearby Help',
+                      'Emergency Contacts',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
-                        const SizedBox(width: 8),
-                        _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
-                        const SizedBox(width: 8),
-                        _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
-                      ],
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _showAddContactDialog(context, sosProvider);
+                      },
+                      icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
+                      label: Text(
+                        'ADD',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 100),
                   ],
                 ),
-              ),
+                const SizedBox(height: 4),
+                _buildContactsList(context, sosProvider, isDark),
+                const SizedBox(height: 16),
+                Text(
+                  'Nearby Help',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
+                    const SizedBox(width: 8),
+                    _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
+                    const SizedBox(width: 8),
+                    _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
+                  ],
+                ),
+                const SizedBox(height: 100),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFeatureToggle(BuildContext context, String title, bool value, Color activeColor, Function(bool) onToggle, bool isDark, {String? subtitle, IconData? icon}) {
-    final primaryColor = isDark ? Colors.white : Colors.black;
     return _InteractiveTile(
-      onTap: () => onToggle(!value),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onToggle(!value);
+      },
       borderRadius: BorderRadius.circular(24),
       splashColor: activeColor.withOpacity(0.1),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: isDark 
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      (value ? activeColor : Colors.white).withOpacity(0.15),
-                      (value ? activeColor : Colors.white).withOpacity(0.04),
-                    ],
-                  )
-                : null,
-              color: !isDark 
-                ? (value ? activeColor.withOpacity(0.08) : Colors.black.withOpacity(0.03))
-                : null,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isDark 
-                  ? (value ? activeColor.withOpacity(0.4) : Colors.white.withOpacity(0.12))
-                  : (value ? activeColor.withOpacity(0.2) : Colors.black.withOpacity(0.05)),
-                width: 1
-              ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark 
+            ? (value ? activeColor.withOpacity(0.25) : const Color(0xFF1A1A1A))
+            : (value ? activeColor.withOpacity(0.3) : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark 
+              ? (value ? activeColor.withOpacity(0.5) : Colors.white.withOpacity(0.08))
+              : (value ? activeColor.withOpacity(0.4) : Colors.black.withOpacity(0.05)),
+            width: 1
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              icon ?? Icons.settings_rounded, 
+              color: value ? activeColor : (isDark ? Colors.white38 : Colors.black38), 
+              size: 22
             ),
-            child: Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : (isDark ? Colors.white38 : Colors.black38), size: 22),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : Colors.black,
-                        height: 1.1,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle ?? (value ? 'ACTIVE' : 'OFF'),
-                      style: TextStyle(
-                        fontSize: 10, 
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: value ? activeColor : (isDark ? Colors.white24 : Colors.black26)
-                      ),
-                    ),
-                  ],
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : Colors.black,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle ?? (value ? 'ACTIVE' : 'OFF'),
+                  style: TextStyle(
+                    fontSize: 10, 
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    color: value ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -386,70 +367,62 @@ class SosScreen extends StatelessWidget {
   Widget _buildToolCard(BuildContext context, String title, IconData icon, bool isDark, VoidCallback onTap, {bool isActive = false, Color activeColor = const Color(0xFF00C853)}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
     return _InteractiveTile(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(24),
       splashColor: (isActive ? activeColor : primaryColor).withOpacity(0.1),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: isDark 
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      (isActive ? activeColor : Colors.white).withOpacity(0.15),
-                      (isActive ? activeColor : Colors.white).withOpacity(0.04),
-                    ],
-                  )
-                : null,
-              color: !isDark 
-                ? (isActive ? activeColor.withOpacity(0.08) : Colors.black.withOpacity(0.03))
-                : null,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isDark 
-                  ? (isActive ? activeColor.withOpacity(0.4) : Colors.white.withOpacity(0.12))
-                  : (isActive ? activeColor.withOpacity(0.2) : Colors.black.withOpacity(0.05)), 
-                width: 1
-              ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark 
+            ? (isActive ? activeColor.withOpacity(0.25) : const Color(0xFF1A1A1A))
+            : (isActive ? activeColor.withOpacity(0.3) : Colors.grey[100]),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark 
+              ? (isActive ? activeColor.withOpacity(0.5) : Colors.white.withOpacity(0.08))
+              : (isActive ? activeColor.withOpacity(0.4) : Colors.black.withOpacity(0.05)),
+            width: 1
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(
+              icon, 
+              color: isActive ? activeColor : (isDark ? Colors.white38 : Colors.black38), 
+              size: 22
             ),
-            child: Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: isActive ? activeColor : (isDark ? Colors.white38 : Colors.black38), size: 22),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title, 
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800, 
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isActive ? 'RUNNING' : 'STANDBY',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
-                      )
-                    ),
-                  ],
+                Text(
+                  title, 
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800, 
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isActive ? 'RUNNING' : 'STANDBY',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                  )
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -506,120 +479,128 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider, {Animation<double>? animation}) {
-    Widget tile = ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: isDark ? 10 : 0, sigmaY: isDark ? 10 : 0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08)),
+  Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider, {Animation<double>? animation, bool isRemoving = false}) {
+    Widget tile = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isRemoving 
+          ? (isDark ? Colors.red.withOpacity(0.15) : Colors.red[50]) 
+          : (isDark ? const Color(0xFF1A1A1A) : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isRemoving 
+            ? Colors.red.withOpacity(0.3) 
+            : (isDark ? Colors.white : Colors.black).withOpacity(0.08)
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            contact.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900, 
-                              fontSize: 14, 
-                              color: isDark ? Colors.white : Colors.black, 
-                              height: 1.2
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    Flexible(
+                      child: Text(
+                        contact.name,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900, 
+                          fontSize: 14, 
+                          color: isDark ? Colors.white : Colors.black, 
+                          height: 1.2
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          contact.relationship.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10, 
-                            fontWeight: FontWeight.w800, 
-                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.3),
-                            letterSpacing: 0.4
-                          ),
-                        ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 8),
                     Text(
-                      contact.phoneNumber,
-                      style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w700, fontSize: 12, height: 1.2),
+                      contact.relationship.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10, 
+                        fontWeight: FontWeight.w800, 
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.3),
+                        letterSpacing: 0.4
+                      ),
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(Icons.edit_outlined, color: (isDark ? Colors.white : Colors.black).withOpacity(0.3), size: 18),
-                onPressed: () => _showAddContactDialog(context, provider, contact: contact),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853), size: 20),
-                onPressed: () => _makePhoneCall(contact.phoneNumber),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(Icons.delete_outline_rounded, color: Colors.red[400]?.withOpacity(0.8), size: 20),
-                onPressed: () {
-                  HapticFeedback.mediumImpact();
-                  final index = provider.contacts.indexOf(contact);
-                  if (index != -1) {
-                    provider.removeContactAt(index, (c, anim) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _buildContactTile(context, c, isDark, provider, animation: anim),
-                    ));
-                  }
-                },
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text(
+                  contact.phoneNumber,
+                  style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w700, fontSize: 12, height: 1.2),
+                ),
+              ],
+            ),
           ),
-        ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: Icon(Icons.edit_outlined, color: (isDark ? Colors.white : Colors.black).withOpacity(0.3), size: 18),
+            onPressed: () => _showAddContactDialog(context, provider, contact: contact),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853), size: 20),
+            onPressed: () => _makePhoneCall(contact.phoneNumber),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: Icon(Icons.delete_outline_rounded, color: Colors.red[400]?.withOpacity(0.8), size: 20),
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              final index = provider.contacts.indexOf(contact);
+              if (index != -1) {
+                provider.removeContactAt(index, (c, anim) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildContactTile(context, c, isDark, provider, animation: anim, isRemoving: true),
+                ));
+              }
+            },
+          ),
+        ],
       ),
     );
 
     if (animation != null) {
-      return SlideTransition(
-        position: animation.drive(
-          Tween<Offset>(
-            begin: const Offset(1.0, 0.0),
-            end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeOutCubic)),
+      return SizeTransition(
+        sizeFactor: CurvedAnimation(
+          parent: animation,
+          // Collapse starts slightly before the slide/fade finishes for a seamless flow
+          curve: const Interval(0.0, 0.7, curve: Curves.easeInOutQuart),
         ),
-        child: FadeTransition(
-          opacity: animation,
-          child: SizeTransition(
-            sizeFactor: animation,
-            axisAlignment: -1.0,
+        axisAlignment: -1.0,
+        child: SlideTransition(
+          position: animation.drive(
+            Tween<Offset>(
+              begin: const Offset(1.5, 0.0), // Slide further out
+              end: Offset.zero,
+            ).chain(CurveTween(curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic))),
+          ),
+          child: FadeTransition(
+            opacity: animation.drive(
+              Tween<double>(begin: 0.0, end: 1.0).chain(
+                CurveTween(curve: const Interval(0.4, 1.0, curve: Curves.easeInCubic)),
+              ),
+            ),
             child: tile,
           ),
         ),
@@ -637,64 +618,48 @@ class SosScreen extends StatelessWidget {
           onTap: () => _launchMaps(query),
           borderRadius: BorderRadius.circular(16),
           splashColor: primaryColor.withOpacity(0.05),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: isDark ? 10 : 0, sigmaY: isDark ? 10 : 0),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: isDark 
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.08),
-                          Colors.white.withOpacity(0.02),
-                        ],
-                      )
-                    : null,
-                  color: !isDark ? Colors.black.withOpacity(0.02) : null,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: primaryColor.withOpacity(0.1)),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primaryColor.withOpacity(0.08)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.04),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: primaryColor.withOpacity(0.5), size: 22),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.04),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, color: primaryColor.withOpacity(0.5), size: 22),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 10,
-                        color: primaryColor.withOpacity(0.8),
-                        height: 1.1,
-                        letterSpacing: -0.2,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'NEARBY',
-                      style: TextStyle(
-                        fontSize: 7,
-                        fontWeight: FontWeight.w900,
-                        color: primaryColor.withOpacity(0.3),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 10,
+                    color: primaryColor.withOpacity(0.8),
+                    height: 1.1,
+                    letterSpacing: -0.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  'NEARBY',
+                  style: TextStyle(
+                    fontSize: 7,
+                    fontWeight: FontWeight.w900,
+                    color: primaryColor.withOpacity(0.3),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -704,8 +669,6 @@ class SosScreen extends StatelessWidget {
 
   Future<void> _launchMaps(String query) async {
     final queryEncoded = Uri.encodeComponent('$query near me');
-    
-    // Try Google Maps app first via geo intent
     final googleMapsUrl = 'geo:0,0?q=$queryEncoded';
     final httpsUrl = 'https://www.google.com/maps/search/?api=1&query=$queryEncoded';
     
@@ -812,130 +775,198 @@ class SosScreen extends StatelessWidget {
   void _showSettingsDialog(BuildContext context, SosProvider provider) {
     final messageController = TextEditingController(text: provider.sosMessage);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sensitivityNotifier = ValueNotifier<double>(provider.crashSensitivity);
+    final autoCallNotifier = ValueNotifier<bool>(provider.isAutoCallEnabled);
 
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: '',
       barrierColor: Colors.black.withOpacity(0.6),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) => const SizedBox.shrink(),
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
-          child: FadeTransition(
-            opacity: anim1,
-            child: AlertDialog(
-              backgroundColor: Colors.transparent,
-              contentPadding: EdgeInsets.zero,
-              content: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[900]!.withOpacity(0.9) : Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                        width: 1.5,
-                      ),
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, anim1, anim2) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8 * anim1.value, sigmaY: 8 * anim1.value),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.85, end: 1.0).animate(CurvedAnimation(parent: anim1, curve: Curves.easeOutQuart)),
+              child: FadeTransition(
+                opacity: anim1,
+                child: AlertDialog(
+                  backgroundColor: isDark ? const Color(0xFF1A1A1A).withOpacity(0.85) : Colors.white.withOpacity(0.85),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(32),
+                    side: BorderSide(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                      width: 1,
                     ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Safety Settings',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildStyledField(
-                            messageController, 
-                            'SOS MESSAGE', 
-                            Icons.message_outlined, 
-                            isDark, 
-                            maxLines: 3,
-                            formatters: [EmojiFilter()] // Emojis removed from message
-                          ),
-                          const SizedBox(height: 20),
-                          _buildSettingsToggle('Auto-Call Contacts', provider.isAutoCallEnabled, provider.toggleAutoCall, isDark),
-                          const SizedBox(height: 16),
-                          Text(
-                            'CRASH SENSITIVITY',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1,
-                              color: isDark ? Colors.white38 : Colors.black38,
-                            ),
-                          ),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: const Color(0xFF00C853),
-                              inactiveTrackColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                              thumbColor: const Color(0xFF00C853),
-                              overlayColor: const Color(0xFF00C853).withOpacity(0.2),
-                            ),
-                            child: Slider(
-                              value: provider.crashSensitivity,
-                              onChanged: (v) => provider.updateCrashSensitivity(v),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDark ? Colors.white : Colors.black,
-                                    foregroundColor: isDark ? Colors.black : Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    elevation: 0,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  content: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Safety Settings',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: isDark ? Colors.white : Colors.black,
                                   ),
-                                  onPressed: () {
-                                    HapticFeedback.mediumImpact();
-                                    provider.updateSosMessage(messageController.text);
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w900)),
                                 ),
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: Icon(Icons.close_rounded, color: isDark ? Colors.white38 : Colors.black38),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            SosScreen.buildStyledField(
+                              messageController, 
+                              'SOS MESSAGE', 
+                              Icons.message_rounded, 
+                              isDark, 
+                              maxLines: 2,
+                              formatters: [EmojiFilter()]
+                            ),
+                            const SizedBox(height: 20),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: autoCallNotifier,
+                              builder: (context, val, _) {
+                                return _buildSettingsToggle(
+                                  'Auto-Call Contacts', 
+                                  val, 
+                                  (v) {
+                                    autoCallNotifier.value = v;
+                                    provider.toggleAutoCall(v);
+                                  }, 
+                                  isDark
+                                );
+                              }
+                            ),
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4, bottom: 8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'CRASH SENSITIVITY',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.5,
+                                      color: isDark ? Colors.white38 : Colors.black38,
+                                    ),
+                                  ),
+                                  ValueListenableBuilder<double>(
+                                    valueListenable: sensitivityNotifier,
+                                    builder: (context, val, _) {
+                                      return Text(
+                                        '${(val * 10).toInt()}/10',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          color: isDark ? Colors.white : Colors.black,
+                                        ),
+                                      );
+                                    }
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: isDark ? Colors.white : Colors.black,
+                                inactiveTrackColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                                thumbColor: isDark ? Colors.white : Colors.black,
+                                overlayColor: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                                trackHeight: 4,
+                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8, pressedElevation: 0),
+                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                                activeTickMarkColor: Colors.transparent,
+                                inactiveTickMarkColor: Colors.transparent,
+                              ),
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: sensitivityNotifier,
+                                builder: (context, val, _) {
+                                  return Slider(
+                                    value: val,
+                                    onChanged: (v) => sensitivityNotifier.value = v,
+                                    onChangeEnd: (v) {
+                                      HapticFeedback.selectionClick();
+                                      provider.updateCrashSensitivity(v);
+                                    },
+                                  );
+                                }
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDark ? Colors.white : Colors.black,
+                                  foregroundColor: isDark ? Colors.black : Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  padding: const EdgeInsets.symmetric(vertical: 18),
+                                  elevation: 0,
+                                ),
+                                onPressed: () {
+                                  HapticFeedback.mediumImpact();
+                                  provider.updateSosMessage(messageController.text);
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('SAVE SETTINGS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        }
+      ),
     );
   }
 
   Widget _buildSettingsToggle(String title, bool value, Function(bool) onChanged, bool isDark) {
+    final activeColor = isDark ? Colors.white : Colors.black;
     return _InteractiveTile(
       onTap: () {
         HapticFeedback.selectionClick();
         onChanged(!value);
       },
-      borderRadius: BorderRadius.circular(16),
-      splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      borderRadius: BorderRadius.circular(20),
+      splashColor: activeColor.withOpacity(0.05),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-          borderRadius: BorderRadius.circular(16),
+          color: value 
+            ? activeColor.withOpacity(0.08) 
+            : (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: value 
+              ? activeColor.withOpacity(0.2) 
+              : (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -943,19 +974,31 @@ class SosScreen extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
-            Transform.scale(
-              scale: 0.8,
-              child: Switch.adaptive(
-                value: value,
-                onChanged: (v) {
-                  HapticFeedback.selectionClick();
-                  onChanged(v);
-                },
-                activeColor: const Color(0xFF00C853),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 32,
+              height: 18,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: value ? activeColor : (isDark ? Colors.white12 : Colors.black12),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: value ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white24 : Colors.black26),
+                  ),
+                ),
               ),
             ),
           ],
@@ -997,7 +1040,7 @@ class SosScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStyledField(TextEditingController controller, String label, IconData icon, bool isDark, {TextInputType? keyboardType, List<TextInputFormatter>? formatters, String? errorText, int maxLines = 1}) {
+  static Widget buildStyledField(TextEditingController controller, String label, IconData icon, bool isDark, {TextInputType? keyboardType, List<TextInputFormatter>? formatters, String? errorText, int maxLines = 1}) {
     final primaryColor = isDark ? Colors.white : Colors.black;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1092,7 +1135,7 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: widget.isDark ? Colors.black : Colors.white,
+          color: widget.isDark ? const Color(0xFF121212) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(
             color: (widget.isDark ? Colors.white : Colors.black).withOpacity(0.1),
@@ -1121,7 +1164,7 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
               ),
             ),
             const SizedBox(height: 32),
-            const SosScreen()._buildStyledField(
+            SosScreen.buildStyledField(
               widget.nameController, 
               'Full Name', 
               Icons.person_outline, 
@@ -1129,7 +1172,7 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
               errorText: nameError, 
             ),
             const SizedBox(height: 16),
-            const SosScreen()._buildStyledField(
+            SosScreen.buildStyledField(
               widget.phoneController, 
               'Phone Number', 
               Icons.phone_outlined, 
@@ -1139,7 +1182,7 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
               errorText: phoneError,
             ),
             const SizedBox(height: 16),
-            const SosScreen()._buildStyledField(
+            SosScreen.buildStyledField(
               widget.relationController, 
               'Relationship', 
               Icons.favorite_outline, 
