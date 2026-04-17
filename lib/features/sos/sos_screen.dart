@@ -52,222 +52,259 @@ class SosScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: RepaintBoundary(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
+          children: [
+            // Ambient background glows for glass effect depth
+            if (isDark) ...[
+              Positioned(
+                top: -150,
+                right: -100,
+                child: Container(
+                  width: 400,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.12),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 200,
+                left: -150,
+                child: Container(
+                  width: 500,
+                  height: 500,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.withOpacity(0.10),
+                  ),
+                ),
+              ),
+            ],
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 50),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'SECURITY HUB',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'SECURITY HUB',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'SECURE',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'SECURE',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: isDark ? Colors.white : Colors.black,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _showSettingsDialog(context, sosProvider);
+                            },
                           ),
                         ),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
-                        onPressed: () {
-                          HapticFeedback.lightImpact();
-                          _showSettingsDialog(context, sosProvider);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _InteractiveTile(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Long press to trigger SOS')),
-                    );
-                  },
-                  onLongPress: () {
-                    HapticFeedback.heavyImpact();
-                    _showSosConfirmation(context, sosProvider);
-                  },
-                  borderRadius: BorderRadius.circular(28),
-                  splashColor: Colors.red.withOpacity(0.08),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-                    decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                    const SizedBox(height: 20),
+                    _InteractiveTile(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Long press to trigger SOS')),
+                        );
+                      },
+                      onLongPress: () {
+                        HapticFeedback.heavyImpact();
+                        _showSosConfirmation(context, sosProvider);
+                      },
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        SosButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Long press to trigger SOS')),
-                            );
-                          },
-                          onLongPress: () {
-                            HapticFeedback.heavyImpact();
-                            _showSosConfirmation(context, sosProvider);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'PRESS AND HOLD FOR EMERGENCY',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                            color: isDark ? Colors.white38 : Colors.black38,
+                      splashColor: Colors.red.withOpacity(0.08),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                SosButton(
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Long press to trigger SOS')),
+                                    );
+                                  },
+                                  onLongPress: () {
+                                    HapticFeedback.heavyImpact();
+                                    _showSosConfirmation(context, sosProvider);
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'PRESS AND HOLD FOR EMERGENCY',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.5,
+                                    color: isDark ? Colors.white38 : Colors.black38,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Security Controls',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GridView.count(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.4,
-                  children: [
-                    _buildFeatureToggle(
-                      context, 
-                      'Crash Detection', 
-                      sosProvider.isCrashDetectionEnabled, 
-                      const Color(0xFFF04770),
-                      (v) => sosProvider.toggleCrashDetection(v),
-                      isDark,
-                      icon: Icons.sensors_rounded,
-                    ),
-                    _buildFeatureToggle(
-                      context, 
-                      'Live Location', 
-                      sosProvider.isSharingLocation, 
-                      const Color(0xFFF78C6A),
-                      (_) => sosProvider.toggleLocationSharing(),
-                      isDark,
-                      icon: Icons.location_on_rounded,
-                      subtitle: sosProvider.isSharingLocation ? 'Sharing' : null
-                    ),
-                    _buildToolCard(
-                      context, 
-                      'Siren', 
-                      sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
-                      isDark, 
-                      () => sosProvider.toggleSiren(),
-                      isActive: sosProvider.isSirenActive,
-                      activeColor: const Color(0xFFFFD167),
-                    ),
-                    _buildToolCard(
-                      context, 
-                      'Strobe', 
-                      sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
-                      isDark, 
-                      () => sosProvider.toggleStrobe(),
-                      isActive: sosProvider.isStrobeActive,
-                      activeColor: const Color(0xFF06D7A0),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    const SizedBox(height: 24),
                     Text(
-                      'Emergency Contacts',
+                      'Security Controls',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        _showAddContactDialog(context, sosProvider);
-                      },
-                      icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
-                      label: Text(
-                        'ADD',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : Colors.black,
+                    const SizedBox(height: 12),
+                    GridView.count(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1.4,
+                      children: [
+                        _buildFeatureToggle(
+                          context, 
+                          'Crash Detection', 
+                          sosProvider.isCrashDetectionEnabled, 
+                          const Color(0xFFF04770),
+                          (v) => sosProvider.toggleCrashDetection(v),
+                          isDark,
+                          icon: Icons.sensors_rounded,
                         ),
+                        _buildFeatureToggle(
+                          context, 
+                          'Live Location', 
+                          sosProvider.isSharingLocation, 
+                          const Color(0xFFF78C6A),
+                          (_) => sosProvider.toggleLocationSharing(),
+                          isDark,
+                          icon: Icons.location_on_rounded,
+                          subtitle: sosProvider.isSharingLocation ? 'Sharing' : null
+                        ),
+                        _buildToolCard(
+                          context, 
+                          'Siren', 
+                          sosProvider.isSirenActive ? Icons.volume_off_rounded : Icons.volume_up_rounded, 
+                          isDark, 
+                          () => sosProvider.toggleSiren(),
+                          isActive: sosProvider.isSirenActive,
+                          activeColor: const Color(0xFFFFD167),
+                        ),
+                        _buildToolCard(
+                          context, 
+                          'Strobe', 
+                          sosProvider.isStrobeActive ? Icons.flashlight_off_rounded : Icons.flashlight_on_rounded, 
+                          isDark, 
+                          () => sosProvider.toggleStrobe(),
+                          isActive: sosProvider.isStrobeActive,
+                          activeColor: const Color(0xFF06D7A0),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Emergency Contacts',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            _showAddContactDialog(context, sosProvider);
+                          },
+                          icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
+                          label: Text(
+                            'ADD',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _buildContactsList(context, sosProvider, isDark),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Nearby Help',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
+                        const SizedBox(width: 8),
+                        _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
+                        const SizedBox(width: 8),
+                        _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
+                      ],
+                    ),
+                    const SizedBox(height: 100),
                   ],
                 ),
-                const SizedBox(height: 4),
-                _buildContactsList(context, sosProvider, isDark),
-                const SizedBox(height: 16),
-                Text(
-                  'Nearby Help',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
-                    const SizedBox(width: 8),
-                    _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
-                    const SizedBox(width: 8),
-                    _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
-                  ],
-                ),
-                const SizedBox(height: 100),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -279,50 +316,68 @@ class SosScreen extends StatelessWidget {
       onTap: () => onToggle(!value),
       borderRadius: BorderRadius.circular(24),
       splashColor: activeColor.withOpacity(0.1),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: value 
-            ? activeColor.withOpacity(0.08) 
-            : (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: value ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05),
-            width: 1.5,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : primaryColor.withOpacity(0.3), size: 22),
-            Column(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: isDark 
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      (value ? activeColor : Colors.white).withOpacity(0.15),
+                      (value ? activeColor : Colors.white).withOpacity(0.04),
+                    ],
+                  )
+                : null,
+              color: !isDark 
+                ? (value ? activeColor.withOpacity(0.08) : Colors.black.withOpacity(0.03))
+                : null,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark 
+                  ? (value ? activeColor.withOpacity(0.4) : Colors.white.withOpacity(0.12))
+                  : (value ? activeColor.withOpacity(0.2) : Colors.black.withOpacity(0.05)),
+                width: 1
+              ),
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : Colors.black,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle ?? (value ? 'ACTIVE' : 'OFF'),
-                  style: TextStyle(
-                    fontSize: 10, 
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                    color: value ? activeColor : (isDark ? Colors.white24 : Colors.black26)
-                  ),
+                Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : (isDark ? Colors.white38 : Colors.black38), size: 22),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : Colors.black,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle ?? (value ? 'ACTIVE' : 'OFF'),
+                      style: TextStyle(
+                        fontSize: 10, 
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: value ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -334,47 +389,67 @@ class SosScreen extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       splashColor: (isActive ? activeColor : primaryColor).withOpacity(0.1),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor.withOpacity(0.08) : primaryColor.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isActive ? activeColor.withOpacity(0.2) : primaryColor.withOpacity(0.05), 
-            width: 1.5
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 22),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title, 
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800, 
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isActive ? 'RUNNING' : 'STANDBY',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                    color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: isDark ? 15 : 0, sigmaY: isDark ? 15 : 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: isDark 
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      (isActive ? activeColor : Colors.white).withOpacity(0.15),
+                      (isActive ? activeColor : Colors.white).withOpacity(0.04),
+                    ],
                   )
+                : null,
+              color: !isDark 
+                ? (isActive ? activeColor.withOpacity(0.08) : Colors.black.withOpacity(0.03))
+                : null,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark 
+                  ? (isActive ? activeColor.withOpacity(0.4) : Colors.white.withOpacity(0.12))
+                  : (isActive ? activeColor.withOpacity(0.2) : Colors.black.withOpacity(0.05)), 
+                width: 1
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, color: isActive ? activeColor : (isDark ? Colors.white38 : Colors.black38), size: 22),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title, 
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800, 
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isActive ? 'RUNNING' : 'STANDBY',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: isActive ? activeColor : (isDark ? Colors.white24 : Colors.black26)
+                      )
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -382,150 +457,175 @@ class SosScreen extends StatelessWidget {
 
   Widget _buildContactsList(BuildContext context, SosProvider sosProvider, bool isDark) {
     if (sosProvider.isLoading) {
-      return const Column(
+      return Column(
         children: [
-          SkeletonTile(height: 60),
-          SizedBox(height: 8),
-          SkeletonTile(height: 60),
+          const SkeletonTile(height: 80),
+          const SizedBox(height: 10),
+          const SkeletonTile(height: 80),
         ],
       );
     }
-    
-    return Container(
-      constraints: const BoxConstraints(minHeight: 110),
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: sosProvider.contacts.isEmpty
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 120),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: sosProvider.contacts.isEmpty
             ? Padding(
                 key: const ValueKey('empty'),
-                padding: const EdgeInsets.symmetric(vertical: 20),
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.people_outline_rounded, size: 32, color: (isDark ? Colors.white : Colors.black).withOpacity(0.1)),
+                      Icon(Icons.people_outline_rounded, color: (isDark ? Colors.white : Colors.black).withOpacity(0.1), size: 40),
                       const SizedBox(height: 8),
                       Text(
                         'No emergency contacts added',
-                        style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontSize: 13, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.2), fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
               )
-            : ListView.separated(
-                key: const ValueKey('list'),
+            : AnimatedList(
+                key: sosProvider.listKey,
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: sosProvider.contacts.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  return _buildContactTile(context, sosProvider.contacts[index], isDark, sosProvider);
+                initialItemCount: sosProvider.contacts.length,
+                itemBuilder: (context, index, animation) {
+                  if (index >= sosProvider.contacts.length) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildContactTile(context, sosProvider.contacts[index], isDark, sosProvider, animation: animation),
+                  );
                 },
               ),
-        ),
       ),
     );
   }
 
-  Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider) {
-    return _InteractiveTile(
-      onTap: () => _showAddContactDialog(context, provider, contact: contact),
+  Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider, {Animation<double>? animation}) {
+    Widget tile = ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                shape: BoxShape.circle,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: isDark ? 10 : 0, sigmaY: isDark ? 10 : 0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
               ),
-              child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          contact.name,
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isDark ? Colors.white : Colors.black),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            contact.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900, 
+                              fontSize: 14, 
+                              color: isDark ? Colors.white : Colors.black, 
+                              height: 1.2
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00C853).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
+                        const SizedBox(width: 8),
+                        Text(
                           contact.relationship.toUpperCase(),
-                          style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF00C853), letterSpacing: 0.5),
+                          style: TextStyle(
+                            fontSize: 10, 
+                            fontWeight: FontWeight.w800, 
+                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.3),
+                            letterSpacing: 0.4
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    contact.phoneNumber,
-                    style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600, fontSize: 12),
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      contact.phoneNumber,
+                      style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w700, fontSize: 12, height: 1.2),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              icon: Icon(Icons.edit_outlined, color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), size: 18),
-              onPressed: () => _showAddContactDialog(context, provider, contact: contact),
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853), size: 18),
-              onPressed: () => _makePhoneCall(contact.phoneNumber),
-            ),
-            IconButton(
-              visualDensity: VisualDensity.compact,
-              icon: Icon(Icons.delete_outline_rounded, color: Colors.red[300], size: 18),
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                final index = provider.contacts.indexOf(contact);
-                if (index != -1) {
-                  provider.removeContactAt(index, (c, animation) => const SizedBox.shrink());
-                }
-              },
-            ),
-          ],
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(Icons.edit_outlined, color: (isDark ? Colors.white : Colors.black).withOpacity(0.3), size: 18),
+                onPressed: () => _showAddContactDialog(context, provider, contact: contact),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853), size: 20),
+                onPressed: () => _makePhoneCall(contact.phoneNumber),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(Icons.delete_outline_rounded, color: Colors.red[400]?.withOpacity(0.8), size: 20),
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  final index = provider.contacts.indexOf(contact);
+                  if (index != -1) {
+                    provider.removeContactAt(index, (c, anim) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _buildContactTile(context, c, isDark, provider, animation: anim),
+                    ));
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
+    if (animation != null) {
+      return SlideTransition(
+        position: animation.drive(
+          Tween<Offset>(
+            begin: const Offset(1.0, 0.0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        ),
+        child: FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            axisAlignment: -1.0,
+            child: tile,
+          ),
+        ),
+      );
     }
+    return tile;
   }
 
   Widget _buildServiceCard(BuildContext context, String title, IconData icon, bool isDark, String query) {
@@ -537,41 +637,64 @@ class SosScreen extends StatelessWidget {
           onTap: () => _launchMaps(query),
           borderRadius: BorderRadius.circular(16),
           splashColor: primaryColor.withOpacity(0.05),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.03),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: primaryColor.withOpacity(0.05), width: 1),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: primaryColor.withOpacity(0.3), size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 11,
-                    color: primaryColor,
-                    height: 1.1,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: isDark ? 10 : 0, sigmaY: isDark ? 10 : 0),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: isDark 
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.08),
+                          Colors.white.withOpacity(0.02),
+                        ],
+                      )
+                    : null,
+                  color: !isDark ? Colors.black.withOpacity(0.02) : null,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: primaryColor.withOpacity(0.1)),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'NEARBY',
-                  style: TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                    letterSpacing: 0.5,
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.04),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: primaryColor.withOpacity(0.5), size: 22),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 10,
+                        color: primaryColor.withOpacity(0.8),
+                        height: 1.1,
+                        letterSpacing: -0.2,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'NEARBY',
+                      style: TextStyle(
+                        fontSize: 7,
+                        fontWeight: FontWeight.w900,
+                        color: primaryColor.withOpacity(0.3),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -841,6 +964,16 @@ class SosScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
+
   void _showAddContactDialog(BuildContext context, SosProvider provider, {EmergencyContact? contact}) {
     final nameController = TextEditingController(text: contact?.name);
     final phoneController = TextEditingController(
@@ -994,7 +1127,6 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
               Icons.person_outline, 
               widget.isDark, 
               errorText: nameError, 
-              // Emoji support enabled by removing EmojiFilter
             ),
             const SizedBox(height: 16),
             const SosScreen()._buildStyledField(

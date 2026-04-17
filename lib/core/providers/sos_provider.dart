@@ -51,16 +51,16 @@ class SosProvider with ChangeNotifier {
   }
 
   bool _isSosActive = false;
-  Timer? _sosTimer;
 
   bool get isSosActive => _isSosActive;
 
   Future<void> triggerSos() async {
+    if (_isSosActive) return;
     _isSosActive = true;
     
     // Enable all security controls when SOS is triggered
-    if (!_isSirenActive) await toggleSiren();
-    if (!_isStrobeActive) await toggleStrobe();
+    await _setSiren(true);
+    await _setStrobe(true);
     if (!_isSharingLocation) toggleLocationSharing();
     if (!_isCrashDetectionEnabled) await toggleCrashDetection(true);
     
@@ -68,53 +68,74 @@ class SosProvider with ChangeNotifier {
   }
 
   Future<void> stopSos() async {
+    if (!_isSosActive) return;
     _isSosActive = false;
     
     // Disable all security controls
-    if (_isSirenActive) await toggleSiren();
-    if (_isStrobeActive) await toggleStrobe();
+    await _setSiren(false);
+    await _setStrobe(false);
     if (_isSharingLocation) toggleLocationSharing();
-    if (_isCrashDetectionEnabled) await toggleCrashDetection(false);
+    // We might want to keep crash detection enabled if it was enabled before?
+    // But stopSos usually means "I'm safe now, stop everything triggered by SOS"
     
     notifyListeners();
   }
 
   Future<void> _setupAudio() async {
-    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    await _audioPlayer.setSource(AssetSource('audio/siren.mp3'));
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.setSource(AssetSource('audio/siren.mp3'));
+    } catch (e) {
+      debugPrint("Error setting up audio: $e");
+    }
+  }
+
+  Future<void> _setSiren(bool active) async {
+    if (_isSirenActive == active) return;
+    try {
+      if (active) {
+        await _audioPlayer.resume();
+      } else {
+        await _audioPlayer.stop();
+      }
+      _isSirenActive = active;
+    } catch (e) {
+      debugPrint("Error setting siren to $active: $e");
+      // Force state to false if it fails to start
+      if (active) _isSirenActive = false;
+    }
   }
 
   Future<void> toggleSiren() async {
-    if (_isSirenActive) {
-      await _audioPlayer.stop();
-    } else {
-      try {
-        await _audioPlayer.resume();
-      } catch (e) {
-        debugPrint("Error playing siren: $e");
-      }
-    }
-    _isSirenActive = !_isSirenActive;
+    await _setSiren(!_isSirenActive);
     notifyListeners();
   }
 
-  Future<void> toggleStrobe() async {
-    if (_isStrobeActive) {
-      try {
+  Future<void> _setStrobe(bool active) async {
+    if (_isStrobeActive == active) return;
+    try {
+      if (active) {
+        final available = await TorchLight.isTorchAvailable();
+        if (available) {
+          await TorchLight.enableTorch();
+          _isStrobeActive = true;
+        }
+      } else {
         await TorchLight.disableTorch();
-      } catch (e) {
-        debugPrint("Error disabling torch: $e");
+        _isStrobeActive = false;
       }
-    } else {
-      try {
-        await TorchLight.enableTorch();
-      } catch (e) {
-        debugPrint("Error enabling torch: $e");
-      }
+    } catch (e) {
+      debugPrint("Error setting strobe to $active: $e");
+      // Ensure state is false if hardware fails
+      _isStrobeActive = false;
     }
-    _isStrobeActive = !_isStrobeActive;
+  }
+
+  Future<void> toggleStrobe() async {
+    await _setStrobe(!_isStrobeActive);
     notifyListeners();
   }
+
 
   void _startCrashDetection() {
     _accelerometerSubscription?.cancel();
@@ -148,12 +169,15 @@ class SosProvider with ChangeNotifier {
 
   void _onCrashDetected(double intensity) {
     debugPrint("CRASH DETECTED! Intensity: $intensity G");
-    // In a real app, this would trigger a countdown UI
-    // For now, we'll activate safety features if enabled
-    if (!_isSirenActive) toggleSiren();
-    if (!_isStrobeActive) toggleStrobe();
     
-    // notifyListeners could be used to show an overlay in the UI
+    // Auto-trigger security features on crash
+    _setSiren(true);
+    _setStrobe(true);
+    
+    if (!_isSharingLocation) {
+      toggleLocationSharing();
+    }
+
     notifyListeners();
   }
 
@@ -182,6 +206,24 @@ class SosProvider with ChangeNotifier {
     _contacts = contactsJson
         .map((item) => EmergencyContact.fromJson(json.decode(item)))
         .toList();
+
+    // Add test contacts if list is empty
+    if (_contacts.isEmpty) {
+      final testContacts = [
+        EmergencyContact(id: '1', name: 'John Doe', phoneNumber: '+91 98765 43210', relationship: 'Father'),
+        EmergencyContact(id: '2', name: 'Jane Smith', phoneNumber: '+91 87654 32109', relationship: 'Mother'),
+        EmergencyContact(id: '3', name: 'Mike Ross', phoneNumber: '+91 76543 21098', relationship: 'Brother'),
+        EmergencyContact(id: '4', name: 'Rachel Zane', phoneNumber: '+91 65432 10987', relationship: 'Sister'),
+        EmergencyContact(id: '5', name: 'Harvey Specter', phoneNumber: '+91 54321 09876', relationship: 'Friend'),
+        EmergencyContact(id: '6', name: 'Donna Paulsen', phoneNumber: '+91 43210 98765', relationship: 'Partner'),
+        EmergencyContact(id: '7', name: 'Louis Litt', phoneNumber: '+91 32109 87654', relationship: 'Colleague'),
+        EmergencyContact(id: '8', name: 'Jessica Pearson', phoneNumber: '+91 21098 76543', relationship: 'Mentor'),
+        EmergencyContact(id: '9', name: 'Robert Zane', phoneNumber: '+91 10987 65432', relationship: 'Guardian'),
+        EmergencyContact(id: '10', name: 'Katrina Bennett', phoneNumber: '+91 01234 56789', relationship: 'Doctor'),
+      ];
+      _contacts.addAll(testContacts);
+    }
+
     _isLoading = false;
     notifyListeners();
   }
