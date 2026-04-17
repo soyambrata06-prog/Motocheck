@@ -1,7 +1,8 @@
-import 'dart:ui';
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
+import '../../core/providers/navigation_provider.dart';
+import '../sound/sound_measure_screen.dart';
 import '../../core/providers/user_provider.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,194 +12,471 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userProvider = Provider.of<UserProvider>(context);
+    final secondaryColor = isDark ? Colors.white38 : Colors.black38;
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-                const SizedBox(height: 60),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RIDER STATUS',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'HELLO, ${userProvider.displayName.split(' ')[0].toUpperCase()}',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-              
-              // FEATURED CARD: Isolated with RepaintBoundary for theme performance
-              RepaintBoundary(
-                child: Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(minHeight: 180),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF00C853), Color(0xFF00FFA3)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00C853).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 60),
+            
+            // Custom Top App Bar (Secure/Database Style)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: _buildTopAppBar(userProvider, isDark),
+            ),
+            
+            const SizedBox(height: 35),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1 & 2. Unified Smart Dashboard
+                  _buildSectionHeader('SMART DASHBOARD', isDark),
+                  _buildUnifiedDashboard(isDark, secondaryColor),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _buildHeroButton('View Full Details', isDark)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _buildHeroButton('Maintenance Logs', isDark)),
                     ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+
+                  const SizedBox(height: 25),
+
+                  // 3. Quick Actions
+                  _buildSectionHeader('QUICK ACTIONS', isDark),
+                  const SizedBox(height: 12),
+                  _buildQuickAction(
+                    context, 
+                    'Police Mode', 
+                    'Verify bike legality instantly', 
+                    Icons.policy_rounded, 
+                    const Color(0xFF2196F3), 
+                    isDark,
+                    onTap: () {
+                      // Navigate to Police Mode
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildQuickAction(
+                    context, 
+                    'SOS Emergency', 
+                    'Send alert + live location', 
+                    Icons.emergency_share_rounded, 
+                    const Color(0xFFFF5252), 
+                    isDark,
+                    onTap: () {
+                      Provider.of<NavigationProvider>(context, listen: false).setIndex(2);
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildQuickAction(
+                    context, 
+                    'Sound Check', 
+                    'Measure exhaust dB level', 
+                    Icons.graphic_eq_rounded, 
+                    const Color(0xFFFF9100), 
+                    isDark,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SoundMeasureScreen()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // 4. Ride Stats
+                  _buildSectionHeader('RIDE INSIGHTS', isDark),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 140,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      clipBehavior: Clip.none,
                       children: [
-                        const Text(
-                          'Total Distance',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          '12,458 KM',
-                          style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            _buildStatItem('Safety Score', '98%', Icons.security_rounded, Colors.white),
-                            const SizedBox(width: 30),
-                            _buildStatItem('Trips', '142', Icons.route_rounded, Colors.white),
-                          ],
-                        ),
+                        _buildStatCard('Distance', '124.8 km', Icons.route_rounded, isDark),
+                        _buildStatCard('Avg Speed', '42 km/h', Icons.speed_rounded, isDark),
+                        _buildStatCard('Ride Time', '3h 20m', Icons.timer_rounded, isDark),
+                        _buildStatCard('Top Speed', '87 km/h', Icons.bolt_rounded, isDark),
                       ],
                     ),
                   ),
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(child: _buildQuickCard(context, isDark, 'Garage', FontAwesomeIcons.motorcycle, '3 Bikes')),
-                  const SizedBox(width: 15),
-                  Expanded(child: _buildQuickCard(context, isDark, 'Badges', FontAwesomeIcons.award, '12 Won')),
+
+                  const SizedBox(height: 25),
+
+                  // 5. Alerts & Warnings
+                  _buildSectionHeader('ALERTS & WARNINGS', isDark),
+                  const SizedBox(height: 12),
+                  _buildAlertTile('Service due in 8 days', Colors.orange, isDark),
+                  const SizedBox(height: 8),
+                  _buildAlertTile('Insurance expires on 28 April', Colors.orange, isDark),
+                  const SizedBox(height: 8),
+                  _buildAlertTile('Exhaust sound slightly above normal', Colors.red, isDark),
+
+                  const SizedBox(height: 25),
+
+                  // 6. Smart Insights
+                  _buildSectionHeader('SMART INSIGHTS', isDark),
+                  const SizedBox(height: 12),
+                  _buildInsightCard('Legal dB Range: 90–95 dB', Icons.gavel_rounded, isDark),
+                  const SizedBox(height: 8),
+                  _buildInsightCard('Avoid high RPM before engine warms up', Icons.tips_and_updates_rounded, isDark),
+                  const SizedBox(height: 8),
+                  _buildInsightCard('Maintain 40–60 km/h for best mileage', Icons.eco_rounded, isDark),
+
+                  const SizedBox(height: 25),
+
+                  // 7. Quick Maintenance
+                  _buildSectionHeader('MAINTENANCE', isDark),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _buildMaintenanceButton('Book Service', Icons.build_rounded, isDark)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _buildMaintenanceButton('Oil Guide', Icons.oil_barrel_rounded, isDark)),
+                      const SizedBox(width: 10),
+                      Expanded(child: _buildMaintenanceButton('Documents', Icons.description_rounded, isDark)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // 8. Last Ride Snapshot
+                  _buildSectionHeader('LAST RIDE SNAPSHOT', isDark),
+                  const SizedBox(height: 12),
+                  _buildLastRideCard(isDark),
+
+                  const SizedBox(height: 120),
                 ],
               ),
-              const SizedBox(height: 25),
-              Text(
-                'Recent Activity',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : Colors.black,
-                ),
-              ),
-              const SizedBox(height: 15),
-              _buildActivityTile(context, isDark, 'Speeding Check', 'Jakarta Selatan', 'Just now'),
-              const SizedBox(height: 12),
-              _buildActivityTile(context, isDark, 'Legality Scan', 'Tangerang', '2 hours ago'),
-              const SizedBox(height: 12),
-              _buildActivityTile(context, isDark, 'Security Alert', 'Depok', 'Yesterday'),
-              const SizedBox(height: 120), // Extra space to scroll past the floating nav
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color iconColor) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0, top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black12,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          child: Icon(icon, color: iconColor, size: 16),
-        ),
-        const SizedBox(width: 10),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopAppBar(UserProvider user, bool isDark) {
+    final textColor = isDark ? Colors.white : Colors.black;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
-            Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(
+              'WELCOME BACK',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+                color: textColor.withOpacity(0.38),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              user.displayName.split(' ')[0].toUpperCase(),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+                color: textColor,
+              ),
+            ),
+          ],
+        ),
+        Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 22,
+                backgroundImage: NetworkImage(user.profileImageUrl),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00A37B),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: isDark ? Colors.black : Colors.white, width: 2),
+                ),
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildQuickCard(BuildContext context, bool isDark, String title, IconData icon, String value) {
+  Widget _buildUnifiedDashboard(bool isDark, Color secondaryColor) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
+    final accentColor = const Color(0xFF00A37B);
+
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: cardBg,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Material(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-            child: InkWell(
-              onTap: () {},
-              splashColor: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
-                    width: 1.5,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accentColor.withOpacity(0.5),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'SYSTEMS OPTIMAL',
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Hunter 350',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : Colors.black,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      Text(
+                        'Royal Enfield • 2023',
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FaIcon(
-                      icon,
-                      color: isDark ? Colors.white : Colors.black,
-                      size: 24,
-                    ),
-                    const SizedBox(height: 15),
-                    Text(title,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                            color: isDark ? Colors.white : Colors.black)),
-                    Text(value, style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500)),
-                  ],
+                Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    FontAwesomeIcons.motorcycle,
+                    size: 60,
+                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  ),
                 ),
-              ),
+              ],
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.black : Colors.white).withOpacity(0.4),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildDashboardStat('FUEL', '62%', Icons.local_gas_station_rounded, Colors.orange, isDark),
+                _buildDashboardStat('BATTERY', 'GOOD', Icons.battery_charging_full_rounded, Colors.green, isDark),
+                _buildDashboardStat('ODOMETER', '12.4k', Icons.speed_rounded, Colors.blue, isDark),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardStat(String label, String value, IconData icon, Color color, bool isDark) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: color.withOpacity(0.8)),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white24 : Colors.black26,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroButton(String label, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08)),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(BuildContext context, String title, String subtitle, IconData icon, Color color, bool isDark, {VoidCallback? onTap}) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
+    final border = isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: border),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap ?? () {},
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: color.withOpacity(0.2)),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 17,
+                          color: isDark ? Colors.white : Colors.black,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black45,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
+              ],
             ),
           ),
         ),
@@ -206,56 +484,243 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityTile(BuildContext context, bool isDark, String title, String subtitle, String time) {
-    final primaryColor = isDark ? Colors.white : Colors.black;
-
+  Widget _buildStatCard(String label, String value, IconData icon, bool isDark) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
     return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: primaryColor.withOpacity(0.03),
-        border: Border.all(
-          color: primaryColor.withOpacity(0.05),
-          width: 1.2,
-        ),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: isDark ? Colors.white70 : Colors.black87),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 18,
+              color: isDark ? Colors.white : Colors.black,
+              letterSpacing: -0.5,
+            ),
+          ),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: isDark ? Colors.white24 : Colors.black26,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertTile(String text, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.notifications_active_rounded, size: 16, color: color),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isDark ? color.withOpacity(0.9) : color.withAlpha(200),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios_rounded, size: 12, color: color.withOpacity(0.3)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightCard(String text, IconData icon, bool isDark) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: isDark ? Colors.white38 : Colors.black38),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMaintenanceButton(String label, IconData icon, bool isDark) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: isDark ? Colors.white : Colors.black),
+          const SizedBox(height: 8),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isDark ? Colors.white70 : Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastRideCard(bool isDark) {
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '16 April',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'City → Beach Road',
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
+                ),
+                child: Text(
+                  '42 mins',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.black : Colors.white).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(child: Icon(Icons.history_rounded, color: primaryColor.withOpacity(0.5))),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: primaryColor)),
-                      Text(subtitle,
-                          style: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-                Text(time, style: TextStyle(color: isDark ? Colors.white38 : Colors.grey[500], fontSize: 11, fontWeight: FontWeight.w500)),
+                _buildRideStat('DISTANCE', '22 km', isDark),
+                _buildStatDivider(isDark),
+                _buildRideStat('AVG SPEED', '32 km/h', isDark),
+                _buildStatDivider(isDark),
+                _buildRideStat('TOP SPEED', '64 km/h', isDark),
               ],
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildStatDivider(bool isDark) {
+    return Container(
+      height: 24,
+      width: 1,
+      color: isDark ? Colors.white10 : Colors.black12,
+    );
+  }
+
+  Widget _buildRideStat(String label, String value, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: isDark ? Colors.white38 : Colors.black38,
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 15,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+      ],
     );
   }
 }

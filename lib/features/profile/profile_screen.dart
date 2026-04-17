@@ -1,15 +1,18 @@
-import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme_provider.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/providers/user_provider.dart';
+import '../../data/models/sound_test_model.dart';
 import '../../screens/welcome_screen.dart';
 import 'edit_profile_screen.dart';
 import 'notification_settings_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_screen.dart';
 import 'about_screen.dart';
+import '../sound/sound_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
   late AnimationController _glowController;
+  List<SoundTestModel> _soundHistory = [];
 
   @override
   void initState() {
@@ -28,6 +32,19 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    _loadSoundHistory();
+  }
+
+  Future<void> _loadSoundHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> historyStrings = prefs.getStringList('sound_test_history') ?? [];
+    setState(() {
+      _soundHistory = historyStrings
+          .map((item) => SoundTestModel.fromJson(jsonDecode(item)))
+          .toList()
+          .reversed
+          .toList();
+    });
   }
 
   @override
@@ -132,10 +149,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                  color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
                     width: 1.5,
                   ),
                 ),
@@ -199,6 +216,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               ),
               
               const SizedBox(height: 35),
+              _buildSoundHistorySection(isDark),
+              
+              const SizedBox(height: 35),
               Text(
                 'Settings',
                 style: TextStyle(
@@ -212,10 +232,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               // Settings Section
               Container(
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                  color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
                     width: 1.5,
                   ),
                 ),
@@ -248,6 +268,109 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSoundHistorySection(bool isDark) {
+    if (_soundHistory.isEmpty) return const SizedBox.shrink();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Sound Tests',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SoundHistoryScreen()),
+                );
+              },
+              child: Text('View All', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: _soundHistory.take(5).length,
+            itemBuilder: (context, index) {
+              final test = _soundHistory[index];
+              return Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: test.isPass ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          test.isPass ? Icons.check_circle_outline : Icons.error_outline,
+                          size: 16,
+                          color: test.isPass ? Colors.green : Colors.red,
+                        ),
+                        Text(
+                          '${test.peakDb.toInt()} dB',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          test.bikeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          test.timestamp.toString().split(' ')[0],
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

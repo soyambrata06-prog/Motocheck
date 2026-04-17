@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../core/providers/navigation_provider.dart';
 import '../features/home/home_screen.dart';
 import '../features/check/check_screen.dart';
 import '../features/sos/sos_screen.dart';
@@ -14,17 +16,35 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _selectedIndex = 0;
   late PageController _pageController;
+  late NavigationProvider _navProvider;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _selectedIndex);
+    _navProvider = Provider.of<NavigationProvider>(context, listen: false);
+    _pageController = PageController(initialPage: _navProvider.selectedIndex);
+    _navProvider.addListener(_onProviderIndexChange);
+  }
+
+  void _onProviderIndexChange() {
+    if (_pageController.hasClients) {
+      final providerIndex = _navProvider.selectedIndex;
+      final currentPage = _pageController.page?.round() ?? _pageController.initialPage;
+      
+      if (providerIndex != currentPage) {
+        _pageController.animateToPage(
+          providerIndex,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
+    _navProvider.removeListener(_onProviderIndexChange);
     _pageController.dispose();
     super.dispose();
   }
@@ -37,11 +57,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   void _onItemTapped(int index) {
-    if (_selectedIndex != index) {
+    final navProvider = Provider.of<NavigationProvider>(context, listen: false);
+    if (navProvider.selectedIndex != index) {
       HapticFeedback.lightImpact();
-      setState(() {
-        _selectedIndex = index;
-      });
+      navProvider.setIndex(index);
       _pageController.animateToPage(
         index,
         duration: const Duration(milliseconds: 400),
@@ -51,9 +70,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    Provider.of<NavigationProvider>(context, listen: false).setIndex(index);
   }
 
   @override
@@ -67,143 +84,147 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final double navBarWidth = screenWidth - (horizontalPadding * 2);
     final double itemWidth = navBarWidth / 4;
 
-    return Scaffold(
-      backgroundColor: isDark ? Colors.black : theme.scaffoldBackgroundColor,
-      extendBody: true, // Allows body to go behind the floating nav bar
-      body: ScrollConfiguration(
-        behavior: const ScrollBehavior().copyWith(overscroll: false), // Removes the grey glow
-        child: PageView.builder(
-          controller: _pageController,
-          onPageChanged: _onPageChanged,
-          physics: const BouncingScrollPhysics(),
-          itemCount: _screens.length,
-          itemBuilder: (context, index) {
-            return AnimatedBuilder(
-              animation: _pageController,
-              builder: (context, child) {
-                double value = 0.0;
-                if (_pageController.hasClients && _pageController.position.haveDimensions) {
-                  value = _pageController.page! - index;
-                } else {
-                  value = (_selectedIndex - index).toDouble();
-                }
+    return Consumer<NavigationProvider>(
+      builder: (context, navProvider, child) {
+        return Scaffold(
+          backgroundColor: isDark ? Colors.black : theme.scaffoldBackgroundColor,
+          extendBody: true, // Allows body to go behind the floating nav bar
+          body: ScrollConfiguration(
+            behavior: const ScrollBehavior().copyWith(overscroll: false), // Removes the grey glow
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              physics: const BouncingScrollPhysics(),
+              itemCount: _screens.length,
+              itemBuilder: (context, index) {
+                return AnimatedBuilder(
+                  animation: _pageController,
+                  builder: (context, child) {
+                    double value = 0.0;
+                    if (_pageController.hasClients && _pageController.position.haveDimensions) {
+                      value = _pageController.page! - index;
+                    } else {
+                      value = (navProvider.selectedIndex - index).toDouble();
+                    }
 
-                // Normalizing value between -1.0 and 1.0
-                double offset = value.clamp(-1.0, 1.0);
-                
-                // Fade effect: sharpening the curve for a more professional feel
-                double opacity = (1 - offset.abs() * 1.5).clamp(0.0, 1.0);
-                
-                // Scale effect: subtle shrinking to give depth
-                double scale = 1.0 - (offset.abs() * 0.05);
-                
-                // Vertical shift logic: 
-                double yOffset = offset.abs() * 80; 
+                    // Normalizing value between -1.0 and 1.0
+                    double offset = value.clamp(-1.0, 1.0);
+                    
+                    // Fade effect: sharpening the curve for a more professional feel
+                    double opacity = (1 - offset.abs() * 1.5).clamp(0.0, 1.0);
+                    
+                    // Scale effect: subtle shrinking to give depth
+                    double scale = 1.0 - (offset.abs() * 0.05);
+                    
+                    // Vertical shift logic: 
+                    double yOffset = offset.abs() * 80; 
 
-                // Counteract PageView's horizontal sliding
-                double xOffset = value * MediaQuery.of(context).size.width;
+                    // Counteract PageView's horizontal sliding
+                    double xOffset = value * MediaQuery.of(context).size.width;
 
-                return Transform.translate(
-                  offset: Offset(xOffset, yOffset),
-                  child: Transform.scale(
-                    scale: scale,
-                    child: Opacity(
-                      opacity: opacity,
-                      child: _screens[index],
-                    ),
-                  ),
+                    return Transform.translate(
+                      offset: Offset(xOffset, yOffset),
+                      child: Transform.scale(
+                        scale: scale,
+                        child: Opacity(
+                          opacity: opacity,
+                          child: _screens[index],
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-          bottom: 24, // Margin from bottom of screen
-        ),
-        child: Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withOpacity(0.85),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-              width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Stack(
-                children: [
-                  // Sliding Background (Capsule) - Now following the PageController linearly
-                  AnimatedBuilder(
-                    animation: _pageController,
-                    builder: (context, child) {
-                      double page = 0;
-                      if (_pageController.hasClients && _pageController.position.haveDimensions) {
-                        page = _pageController.page!;
-                      } else {
-                        page = _selectedIndex.toDouble();
-                      }
-                      
-                      return Positioned(
-                        left: page * itemWidth + 6,
-                        top: 8,
-                        bottom: 8,
-                        width: itemWidth - 12,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white : Colors.black,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  // Navigation Items
-                  Row(
-                    children: List.generate(4, (index) {
-                      IconData icon;
-                      String label;
-                      switch (index) {
-                        case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
-                        case 1: icon = Icons.search_rounded; label = 'SEARCH'; break;
-                        case 2: icon = Icons.security_rounded; label = 'SECURE'; break;
-                        case 3: icon = Icons.person_rounded; label = 'ME'; break;
-                        default: icon = Icons.home_rounded; label = '';
-                      }
-                      return _buildNavItem(index, icon, label, theme, itemWidth);
-                    }),
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              bottom: 24, // Margin from bottom of screen
+            ),
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                color: (isDark ? const Color(0xFF1E1E1E) : Colors.white).withOpacity(0.85),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Stack(
+                    children: [
+                      // Sliding Background (Capsule) - Now following the PageController linearly
+                      AnimatedBuilder(
+                        animation: _pageController,
+                        builder: (context, child) {
+                          double page = 0;
+                          if (_pageController.hasClients && _pageController.position.haveDimensions) {
+                            page = _pageController.page!;
+                          } else {
+                            page = navProvider.selectedIndex.toDouble();
+                          }
+                          
+                          return Positioned(
+                            left: page * itemWidth + 6,
+                            top: 8,
+                            bottom: 8,
+                            width: itemWidth - 12,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white : Colors.black,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Navigation Items
+                      Row(
+                        children: List.generate(4, (index) {
+                          IconData icon;
+                          String label;
+                          switch (index) {
+                            case 0: icon = Icons.grid_view_rounded; label = 'HOME'; break; // Changed to more modern icon
+                            case 1: icon = Icons.search_rounded; label = 'SEARCH'; break;
+                            case 2: icon = Icons.security_rounded; label = 'SECURE'; break;
+                            case 3: icon = Icons.person_rounded; label = 'ME'; break;
+                            default: icon = Icons.home_rounded; label = '';
+                          }
+                          return _buildNavItem(index, icon, label, theme, itemWidth, navProvider);
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, ThemeData theme, double itemWidth) {
+  Widget _buildNavItem(int index, IconData icon, String label, ThemeData theme, double itemWidth, NavigationProvider navProvider) {
     final isDark = theme.brightness == Brightness.dark;
 
     return Expanded(
@@ -217,7 +238,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             if (_pageController.hasClients && _pageController.position.haveDimensions) {
               page = _pageController.page!;
             } else {
-              page = _selectedIndex.toDouble();
+              page = navProvider.selectedIndex.toDouble();
             }
 
             // Calculate how "active" this specific tab is (1.0 = fully active, 0.0 = inactive)

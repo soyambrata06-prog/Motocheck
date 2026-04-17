@@ -56,17 +56,21 @@ class SosScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final sosProvider = Provider.of<SosProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: RepaintBoundary(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 60),
+                
+                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -76,9 +80,9 @@ class SosScreen extends StatelessWidget {
                         Text(
                           'SECURITY HUB',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
+                            letterSpacing: 2,
                             color: isDark ? Colors.white38 : Colors.black38,
                           ),
                         ),
@@ -88,119 +92,44 @@ class SosScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                            letterSpacing: -1,
                             color: sosProvider.isSosActive 
                               ? const Color(0xFFFF5252) 
                               : (isDark ? Colors.white : Colors.black),
                           ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder: (child, animation) => FadeTransition(
-                              opacity: animation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 0.2),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              ),
-                            ),
-                            child: Text(
-                              sosProvider.isSosActive ? 'ALARM' : 'SECURE',
-                              key: ValueKey(sosProvider.isSosActive),
-                            ),
-                          ),
+                          child: Text(sosProvider.isSosActive ? 'ALARM' : 'SECURE'),
                         ),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(Icons.settings_rounded, color: isDark ? Colors.white : Colors.black),
-                        onPressed: () {
-                          HapticFeedback.lightImpact();
-                          _showSettingsDialog(context, sosProvider);
-                        },
-                      ),
-                    ),
+                    _buildTopAction(Icons.settings_rounded, isDark, () {
+                      HapticFeedback.lightImpact();
+                      _showSettingsDialog(context, sosProvider);
+                    }),
                   ],
                 ),
-                const SizedBox(height: 20),
-                _InteractiveTile(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Long press to trigger SOS')),
-                    );
-                  },
-                  onLongPress: () {
-                    HapticFeedback.heavyImpact();
-                    _showSosConfirmation(context, sosProvider);
-                  },
-                  borderRadius: BorderRadius.circular(28),
-                  splashColor: Colors.red.withOpacity(0.08),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        SosButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Long press to trigger SOS')),
-                            );
-                          },
-                          onLongPress: () {
-                            HapticFeedback.heavyImpact();
-                            _showSosConfirmation(context, sosProvider);
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'PRESS AND HOLD FOR EMERGENCY',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Security Controls',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
+
+                const SizedBox(height: 30),
+
+                // SOS Trigger Card
+                _buildSosTriggerCard(context, sosProvider, isDark),
+
+                const SizedBox(height: 32),
+
+                // Controls Grid
+                _buildSectionHeader('SECURITY CONTROLS', isDark),
                 const SizedBox(height: 12),
                 GridView.count(
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.4,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.5,
                   children: [
                     _buildFeatureToggle(
                       context, 
-                      'Crash Detection', 
+                      'Crash Detect', 
                       sosProvider.isCrashDetectionEnabled, 
                       const Color(0xFFFF5252),
                       (v) => sosProvider.toggleCrashDetection(v),
@@ -237,64 +166,155 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 32),
+
+                // Emergency Contacts
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Emergency Contacts',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        _showAddContactDialog(context, sosProvider);
-                      },
-                      icon: Icon(Icons.add, size: 18, color: isDark ? Colors.white : Colors.black),
-                      label: Text(
-                        'ADD',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ),
+                    _buildSectionHeader('EMERGENCY CONTACTS', isDark),
+                    _buildAddButton(isDark, () {
+                      HapticFeedback.lightImpact();
+                      _showAddContactDialog(context, sosProvider);
+                    }),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
                 _buildContactsList(context, sosProvider, isDark),
-                const SizedBox(height: 16),
-                Text(
-                  'Nearby Help',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
+
+                const SizedBox(height: 32),
+
+                // Nearby Help
+                _buildSectionHeader('NEARBY HELP', isDark),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
-                    const SizedBox(width: 8),
-                    _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
+                    const SizedBox(width: 12),
+                    _buildServiceCard(context, 'Fire Dept', Icons.local_fire_department_rounded, isDark, 'fire station'),
                   ],
                 ),
-                const SizedBox(height: 100),
+                const SizedBox(height: 120),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopAction(IconData icon, bool isDark, VoidCallback onTap) {
+    return Container(
+      decoration: BoxDecoration(
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: isDark ? Colors.white : Colors.black, size: 20),
+        onPressed: onTap,
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 1.5,
+        color: isDark ? Colors.white38 : Colors.black38,
+      ),
+    );
+  }
+
+  Widget _buildAddButton(bool isDark, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.add_rounded, size: 14, color: isDark ? Colors.white70 : Colors.black.withOpacity(0.7)),
+            const SizedBox(width: 4),
+            Text(
+              'ADD',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white70 : Colors.black.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSosTriggerCard(BuildContext context, SosProvider sosProvider, bool isDark) {
+    return _InteractiveTile(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Long press to trigger SOS')),
+        );
+      },
+      onLongPress: () {
+        HapticFeedback.heavyImpact();
+        _showSosConfirmation(context, sosProvider);
+      },
+      borderRadius: BorderRadius.circular(32),
+      splashColor: Colors.red.withOpacity(0.08),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+            width: 1.5,
+          ),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+          ],
+        ),
+        child: Column(
+          children: [
+            SosButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Long press to trigger SOS')),
+                );
+              },
+              onLongPress: () {
+                HapticFeedback.heavyImpact();
+                _showSosConfirmation(context, sosProvider);
+              },
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'HOLD FOR 3 SECONDS',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+          ],
         ),
       ),
     );

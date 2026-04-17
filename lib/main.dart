@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'core/providers/navigation_provider.dart';
 import 'core/theme_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/providers/user_provider.dart';
 import 'core/providers/sos_provider.dart';
 import 'core/providers/bike_provider.dart';
+import 'core/providers/sound_provider.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'core/services/auth_service.dart';
@@ -39,10 +41,12 @@ class MotoCheckAppWrapper extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => SosProvider()),
         ChangeNotifierProvider(create: (_) => BikeProvider()),
+        ChangeNotifierProvider(create: (_) => SoundProvider()),
         Provider(create: (_) => AuthService()),
       ],
       child: const MotoCheckApp(),
