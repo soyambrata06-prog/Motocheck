@@ -50,7 +50,7 @@ class SosScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? Colors.black : Colors.white,
       body: RepaintBoundary(
         child: SingleChildScrollView(
           child: Padding(
@@ -112,14 +112,14 @@ class SosScreen extends StatelessWidget {
                     HapticFeedback.heavyImpact();
                     _showSosConfirmation(context, sosProvider);
                   },
-                  borderRadius: BorderRadius.circular(32),
+                  borderRadius: BorderRadius.circular(28),
                   splashColor: Colors.red.withOpacity(0.08),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
                     decoration: BoxDecoration(
                       color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(32),
+                      borderRadius: BorderRadius.circular(28),
                       border: Border.all(
                         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
                         width: 1.5,
@@ -152,7 +152,7 @@ class SosScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Text(
                   'Security Controls',
                   style: TextStyle(
@@ -169,7 +169,7 @@ class SosScreen extends StatelessWidget {
                   crossAxisCount: 2,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  childAspectRatio: 1.3,
+                  childAspectRatio: 1.4,
                   children: [
                     _buildFeatureToggle(
                       context, 
@@ -210,7 +210,7 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -223,6 +223,10 @@ class SosScreen extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         _showAddContactDialog(context, sosProvider);
@@ -239,9 +243,9 @@ class SosScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 _buildContactsList(context, sosProvider, isDark),
-                const SizedBox(height: 15),
+                const SizedBox(height: 16),
                 Text(
                   'Nearby Help',
                   style: TextStyle(
@@ -254,9 +258,9 @@ class SosScreen extends StatelessWidget {
                 Row(
                   children: [
                     _buildServiceCard(context, 'Hospitals', Icons.local_hospital_rounded, isDark, 'hospitals'),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     _buildServiceCard(context, 'Police', Icons.policy_rounded, isDark, 'police station'),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     _buildServiceCard(context, 'Fire Station', Icons.local_fire_department_rounded, isDark, 'fire station'),
                   ],
                 ),
@@ -291,12 +295,7 @@ class SosScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : primaryColor.withOpacity(0.3), size: 24),
-              ],
-            ),
+            Icon(icon ?? Icons.settings_rounded, color: value ? activeColor : primaryColor.withOpacity(0.3), size: 22),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -306,12 +305,12 @@ class SosScreen extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : Colors.black,
-                    height: 1.2,
+                    height: 1.1,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle ?? (value ? 'ACTIVE' : 'OFF'),
                   style: TextStyle(
@@ -349,7 +348,7 @@ class SosScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 24),
+            Icon(icon, color: isActive ? activeColor : primaryColor.withOpacity(0.3), size: 22),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -363,7 +362,7 @@ class SosScreen extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   isActive ? 'RUNNING' : 'STANDBY',
                   style: TextStyle(
@@ -385,43 +384,50 @@ class SosScreen extends StatelessWidget {
     if (sosProvider.isLoading) {
       return const Column(
         children: [
-          SkeletonTile(height: 80),
-          SizedBox(height: 12),
-          SkeletonTile(height: 80),
+          SkeletonTile(height: 60),
+          SizedBox(height: 8),
+          SkeletonTile(height: 60),
         ],
       );
     }
     
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOutCubic,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: sosProvider.contacts.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.people_outline_rounded, size: 48, color: (isDark ? Colors.white : Colors.black).withOpacity(0.1)),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No emergency contacts added',
-                      style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600),
-                    ),
-                  ],
+    return Container(
+      constraints: const BoxConstraints(minHeight: 110),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: sosProvider.contacts.isEmpty
+            ? Padding(
+                key: const ValueKey('empty'),
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline_rounded, size: 32, color: (isDark ? Colors.white : Colors.black).withOpacity(0.1)),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No emergency contacts added',
+                        style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
+              )
+            : ListView.separated(
+                key: const ValueKey('list'),
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: sosProvider.contacts.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  return _buildContactTile(context, sosProvider.contacts[index], isDark, sosProvider);
+                },
               ),
-            )
-          : ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: sosProvider.contacts.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildContactTile(context, sosProvider.contacts[index], isDark, sosProvider);
-              },
-            ),
+        ),
       ),
     );
   }
@@ -429,26 +435,26 @@ class SosScreen extends StatelessWidget {
   Widget _buildContactTile(BuildContext context, EmergencyContact contact, bool isDark, SosProvider provider) {
     return _InteractiveTile(
       onTap: () => _showAddContactDialog(context, provider, contact: contact),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       splashColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
+              child: Icon(Icons.person_rounded, color: isDark ? Colors.white : Colors.black, size: 18),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,43 +464,46 @@ class SosScreen extends StatelessWidget {
                       Flexible(
                         child: Text(
                           contact.name,
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: isDark ? Colors.white : Colors.black),
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isDark ? Colors.white : Colors.black),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00C853).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            contact.relationship.toUpperCase(),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF00C853), letterSpacing: 0.5),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00C853).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          contact.relationship.toUpperCase(),
+                          style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF00C853), letterSpacing: 0.5),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     contact.phoneNumber,
-                    style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600, fontSize: 13),
+                    style: TextStyle(color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), fontWeight: FontWeight.w600, fontSize: 12),
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853)),
+              visualDensity: VisualDensity.compact,
+              icon: Icon(Icons.edit_outlined, color: (isDark ? Colors.white : Colors.black).withOpacity(0.4), size: 18),
+              onPressed: () => _showAddContactDialog(context, provider, contact: contact),
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.call_rounded, color: Color(0xFF00C853), size: 18),
               onPressed: () => _makePhoneCall(contact.phoneNumber),
             ),
             IconButton(
-              icon: Icon(Icons.delete_outline_rounded, color: Colors.red[300]),
+              visualDensity: VisualDensity.compact,
+              icon: Icon(Icons.delete_outline_rounded, color: Colors.red[300], size: 18),
               onPressed: () {
                 HapticFeedback.mediumImpact();
                 final index = provider.contacts.indexOf(contact);
@@ -526,47 +535,40 @@ class SosScreen extends StatelessWidget {
         aspectRatio: 1.0,
         child: _InteractiveTile(
           onTap: () => _launchMaps(query),
-          borderRadius: BorderRadius.circular(24),
-          splashColor: primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          splashColor: primaryColor.withOpacity(0.05),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
               color: primaryColor.withOpacity(0.03),
-              border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: primaryColor.withOpacity(0.05), width: 1),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, size: 20, color: primaryColor),
-                ),
+                Icon(icon, color: primaryColor.withOpacity(0.3), size: 24),
                 const SizedBox(height: 8),
                 Text(
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    fontSize: 11,
                     color: primaryColor,
-                    letterSpacing: -0.2,
+                    height: 1.1,
                   ),
-                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  'VIEW MAP',
+                  'NEARBY',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 8,
                     fontWeight: FontWeight.w900,
                     color: isDark ? Colors.white38 : Colors.black38,
-                    letterSpacing: 0.8,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
@@ -579,12 +581,22 @@ class SosScreen extends StatelessWidget {
 
   Future<void> _launchMaps(String query) async {
     final queryEncoded = Uri.encodeComponent('$query near me');
-    final url = 'https://www.google.com/maps/search/?api=1&query=$queryEncoded';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      );
+    
+    // Try Google Maps app first via geo intent
+    final googleMapsUrl = 'geo:0,0?q=$queryEncoded';
+    final httpsUrl = 'https://www.google.com/maps/search/?api=1&query=$queryEncoded';
+    
+    try {
+      if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
+        await launchUrl(Uri.parse(googleMapsUrl));
+      } else if (await canLaunchUrl(Uri.parse(httpsUrl))) {
+        await launchUrl(
+          Uri.parse(httpsUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error launching maps: $e');
     }
   }
 
@@ -726,7 +738,8 @@ class SosScreen extends StatelessWidget {
                             'SOS MESSAGE', 
                             Icons.message_outlined, 
                             isDark, 
-                            maxLines: 3
+                            maxLines: 3,
+                            formatters: [EmojiFilter()] // Emojis removed from message
                           ),
                           const SizedBox(height: 20),
                           _buildSettingsToggle('Auto-Call Contacts', provider.isAutoCallEnabled, provider.toggleAutoCall, isDark),
@@ -981,7 +994,7 @@ class _AddContactDialogContentState extends State<_AddContactDialogContent> {
               Icons.person_outline, 
               widget.isDark, 
               errorText: nameError, 
-              formatters: [EmojiFilter()]
+              // Emoji support enabled by removing EmojiFilter
             ),
             const SizedBox(height: 16),
             const SosScreen()._buildStyledField(
