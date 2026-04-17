@@ -12,6 +12,7 @@ import 'notification_settings_screen.dart';
 import 'help_support_screen.dart';
 import 'privacy_screen.dart';
 import 'about_screen.dart';
+import 'widgets/saved_bikes.dart';
 import '../sound/sound_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -214,6 +215,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                   ],
                 ),
               ),
+              
+              const SizedBox(height: 35),
+              const SavedBikes(),
               
               const SizedBox(height: 35),
               _buildSoundHistorySection(isDark),

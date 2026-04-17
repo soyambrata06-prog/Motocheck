@@ -6,28 +6,62 @@ import 'widgets/spec_card.dart';
 import 'widgets/decibel_indicator.dart';
 import '../../../data/models/bike_model.dart';
 
-class ResultScreen extends StatelessWidget {
+import 'package:provider/provider.dart';
+import '../../core/providers/user_provider.dart';
+import '../../../data/services/vehicle_service.dart';
+
+class ResultScreen extends StatefulWidget {
   final String plateNumber;
   const ResultScreen({super.key, required this.plateNumber});
+
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  final VehicleService _vehicleService = VehicleService();
+  BikeModel? _bikeData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBikeDetails();
+  }
+
+  Future<void> _fetchBikeDetails() async {
+    setState(() => _isLoading = true);
+    final data = await _vehicleService.getVehicleDetails(widget.plateNumber);
+    setState(() {
+      _bikeData = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Mock bike data - will be replaced with real API data
-    final mockBike = BikeModel(
-      id: '1',
-      plateNumber: plateNumber.toUpperCase(),
-      make: 'Kawasaki',
-      model: 'Ninja ZX-10R',
-      year: 2023,
-      engineSize: '998cc',
-      power: '203 HP',
-      weight: '207 kg',
-      topSpeed: '299 km/h',
-      dbLimit: 95,
-      isLegal: true,
-    );
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        body: const Center(
+          child: CircularProgressIndicator(color: Color(0xFFFFD600)),
+        ),
+      );
+    }
+
+    if (_bikeData == null) {
+      return Scaffold(
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: Center(
+          child: Text('Vehicle details not found for ${widget.plateNumber}'),
+        ),
+      );
+    }
+
+    final bike = _bikeData!;
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
@@ -76,7 +110,7 @@ class ResultScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 30),
-              BikeCard(bike: mockBike),
+              BikeCard(bike: bike),
               const SizedBox(height: 30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -90,11 +124,11 @@ class ResultScreen extends StatelessWidget {
                       color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
                     ),
                   ),
-                  LegalTag(isLegal: mockBike.isLegal),
+                  LegalTag(isLegal: bike.isLegal),
                 ],
               ),
               const SizedBox(height: 15),
-              DecibelIndicator(decibel: 92, limit: mockBike.dbLimit ?? 95),
+              DecibelIndicator(decibel: 92, limit: bike.dbLimit ?? 95),
               const SizedBox(height: 30),
               Text(
                 'TECHNICAL SPECIFICATIONS',
@@ -115,45 +149,63 @@ class ResultScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 childAspectRatio: 2.2,
                 children: [
-                  SpecCard(label: 'ENGINE', value: mockBike.engineSize ?? 'N/A', icon: FontAwesomeIcons.motorcycle),
-                  SpecCard(label: 'POWER', value: mockBike.power ?? 'N/A', icon: FontAwesomeIcons.bolt),
-                  SpecCard(label: 'WEIGHT', value: mockBike.weight ?? 'N/A', icon: FontAwesomeIcons.weightHanging),
-                  SpecCard(label: 'TOP SPEED', value: mockBike.topSpeed ?? 'N/A', icon: FontAwesomeIcons.gaugeHigh),
+                  SpecCard(label: 'ENGINE', value: bike.engineSize ?? 'N/A', icon: FontAwesomeIcons.motorcycle),
+                  SpecCard(label: 'POWER', value: bike.power ?? 'N/A', icon: FontAwesomeIcons.bolt),
+                  SpecCard(label: 'WEIGHT', value: bike.weight ?? 'N/A', icon: FontAwesomeIcons.weightHanging),
+                  SpecCard(label: 'TOP SPEED', value: bike.topSpeed ?? 'N/A', icon: FontAwesomeIcons.gaugeHigh),
                 ],
               ),
               const SizedBox(height: 40),
-              Container(
-                width: double.infinity,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00C853),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00C853).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+              Consumer<UserProvider>(
+                builder: (context, userProvider, child) {
+                  final isSaved = userProvider.savedBikes.any((b) => b.plateNumber == bike.plateNumber);
+                  
+                  return Container(
+                    width: double.infinity,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: isSaved ? Colors.grey[800] : const Color(0xFF00C853),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: isSaved ? [] : [
+                        BoxShadow(
+                          color: const Color(0xFF00C853).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {},
-                    borderRadius: BorderRadius.circular(24),
-                    child: const Center(
-                      child: Text(
-                        'SAVE TO GARAGE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          if (isSaved) {
+                            userProvider.removeBike(bike.plateNumber);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Removed from Garage')),
+                            );
+                          } else {
+                            userProvider.saveBike(bike);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Saved to Garage')),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(24),
+                        child: Center(
+                          child: Text(
+                            isSaved ? 'REMOVE FROM GARAGE' : 'SAVE TO GARAGE',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 50),
             ],
