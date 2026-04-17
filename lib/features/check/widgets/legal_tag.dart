@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
 
 class LegalTag extends StatelessWidget {
-  const LegalTag({super.key});
+  final bool isLegal;
+  const LegalTag({super.key, this.isLegal = true});
 
   @override
   Widget build(BuildContext context) {
+    final color = isLegal ? const Color(0xFF00C853) : const Color(0xFFFF3D00);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF00C853).withOpacity(0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF00C853).withOpacity(0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.check_circle, size: 14, color: Color(0xFF00C853)),
-          SizedBox(width: 6),
+          Icon(
+            isLegal ? Icons.check_circle : Icons.warning_rounded,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 6),
           Text(
-            'LEGAL',
+            isLegal ? 'LEGAL' : 'ILLEGAL',
             style: TextStyle(
-              color: Color(0xFF00C853),
+              color: color,
               fontWeight: FontWeight.w900,
               fontSize: 11,
               letterSpacing: 0.5,

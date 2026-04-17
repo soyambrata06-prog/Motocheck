@@ -16,7 +16,10 @@ class AppRoutes {
     RouteNames.login: (context) => const LoginScreen(),
     RouteNames.signup: (context) => const SignupScreen(),
     RouteNames.home: (context) => const BaseScreen(),
-    RouteNames.result: (context) => const ResultScreen(),
+    RouteNames.result: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      return ResultScreen(plateNumber: args?['plateNumber'] ?? 'N/A');
+    },
   };
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -34,7 +37,10 @@ class AppRoutes {
       case RouteNames.home:
         return MaterialPageRoute(builder: (_) => const BaseScreen());
       case RouteNames.result:
-        return MaterialPageRoute(builder: (_) => const ResultScreen());
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ResultScreen(plateNumber: args?['plateNumber'] ?? 'N/A'),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

@@ -7,19 +7,26 @@ import 'widgets/decibel_indicator.dart';
 import '../../../data/models/bike_model.dart';
 
 class ResultScreen extends StatelessWidget {
-  const ResultScreen({super.key});
+  final String plateNumber;
+  const ResultScreen({super.key, required this.plateNumber});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    // Mock bike data
+    // Mock bike data - will be replaced with real API data
     final mockBike = BikeModel(
       id: '1',
-      plateNumber: 'ABC 1234',
+      plateNumber: plateNumber.toUpperCase(),
       make: 'Kawasaki',
       model: 'Ninja ZX-10R',
       year: 2023,
+      engineSize: '998cc',
+      power: '203 HP',
+      weight: '207 kg',
+      topSpeed: '299 km/h',
+      dbLimit: 95,
+      isLegal: true,
     );
 
     return Scaffold(
@@ -83,11 +90,11 @@ class ResultScreen extends StatelessWidget {
                       color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
                     ),
                   ),
-                  const LegalTag(),
+                  LegalTag(isLegal: mockBike.isLegal),
                 ],
               ),
               const SizedBox(height: 15),
-              const DecibelIndicator(decibel: 92, limit: 95),
+              DecibelIndicator(decibel: 92, limit: mockBike.dbLimit ?? 95),
               const SizedBox(height: 30),
               Text(
                 'TECHNICAL SPECIFICATIONS',
@@ -107,11 +114,11 @@ class ResultScreen extends StatelessWidget {
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 2.2,
-                children: const [
-                  SpecCard(label: 'ENGINE', value: '998cc', icon: FontAwesomeIcons.motorcycle),
-                  SpecCard(label: 'POWER', value: '203 HP', icon: FontAwesomeIcons.bolt),
-                  SpecCard(label: 'WEIGHT', value: '207 kg', icon: FontAwesomeIcons.weightHanging),
-                  SpecCard(label: 'TOP SPEED', value: '299 km/h', icon: FontAwesomeIcons.gaugeHigh),
+                children: [
+                  SpecCard(label: 'ENGINE', value: mockBike.engineSize ?? 'N/A', icon: FontAwesomeIcons.motorcycle),
+                  SpecCard(label: 'POWER', value: mockBike.power ?? 'N/A', icon: FontAwesomeIcons.bolt),
+                  SpecCard(label: 'WEIGHT', value: mockBike.weight ?? 'N/A', icon: FontAwesomeIcons.weightHanging),
+                  SpecCard(label: 'TOP SPEED', value: mockBike.topSpeed ?? 'N/A', icon: FontAwesomeIcons.gaugeHigh),
                 ],
               ),
               const SizedBox(height: 40),

@@ -74,6 +74,7 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
   }
 
   Future<void> _processImage(CameraImage image) async {
+    if (_detectedPlate != null) return;
     _isProcessing = true;
     
     try {
@@ -95,15 +96,22 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
 
       final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
       
-      // Simple regex for Indian/International Plate
-      RegExp plateRegex = RegExp(r'[A-Z]{1,3}\s?[0-9]{1,4}\s?[A-Z]{0,3}');
+      // Robust regex for Indian License Plates
+      // Matches formats like: MH 12 AB 1234, MH12AB1234, DL 1C AA 1111, BH 22 AB 1234
+      RegExp plateRegex = RegExp(
+        r'([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4})|' // Standard State codes
+        r'([A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4})|'     // BH Series
+        r'([0-9]{2}[A-Z]{2}[0-9]{4}[A-Z]{1,2})',   // Military
+        caseSensitive: false,
+      );
       
       for (TextBlock block in recognizedText.blocks) {
         for (TextLine line in block.lines) {
-          final match = plateRegex.firstMatch(line.text.toUpperCase());
-          if (match != null && match.group(0)!.length > 4) {
+          String cleanText = line.text.replaceAll(RegExp(r'[^A-Z0-9]'), '').toUpperCase();
+          final match = plateRegex.firstMatch(cleanText);
+          if (match != null) {
             _onPlateDetected(match.group(0)!);
-            break;
+            return;
           }
         }
       }
@@ -125,7 +133,9 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ResultScreen()),
+          MaterialPageRoute(
+            builder: (context) => ResultScreen(plateNumber: plate),
+          ),
         );
       }
     });

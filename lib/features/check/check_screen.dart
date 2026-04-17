@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/bike_provider.dart';
 import 'result_screen.dart';
+import 'scan_plate_screen.dart';
 
 class CheckScreen extends StatefulWidget {
   const CheckScreen({super.key});
@@ -65,7 +66,7 @@ class _CheckScreenState extends State<CheckScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ResultScreen(),
+            builder: (context) => ResultScreen(plateNumber: value),
           ),
         );
       }
@@ -415,7 +416,14 @@ class _CheckScreenState extends State<CheckScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: () {
+            if (label == 'Scan Plate') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ScanPlateScreen()),
+              );
+            }
+          },
           borderRadius: BorderRadius.circular(24),
           child: SizedBox(
             height: 120,
@@ -455,7 +463,7 @@ class _CheckScreenState extends State<CheckScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const ResultScreen(),
+                builder: (context) => ResultScreen(plateNumber: plate),
               ),
             );
           },

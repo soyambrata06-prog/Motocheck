@@ -260,7 +260,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildUnifiedDashboard(bool isDark, Color secondaryColor) {
     final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
-    final accentColor = const Color(0xFF00A37B);
+    const accentColor = Color(0xFF00A37B);
 
     return Container(
       width: double.infinity,
