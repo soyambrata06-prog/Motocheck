@@ -220,9 +220,6 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
               const SavedBikes(),
               
               const SizedBox(height: 35),
-              _buildSoundHistorySection(isDark),
-              
-              const SizedBox(height: 35),
               Text(
                 'Settings',
                 style: TextStyle(
@@ -250,6 +247,9 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                     }),
                     _buildPremiumTile(Icons.notifications_none_rounded, 'Notifications', isDark, () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()));
+                    }),
+                    _buildPremiumTile(Icons.history_rounded, 'Sound Check History', isDark, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SoundHistoryScreen()));
                     }),
                     _buildPremiumThemeTile(themeProvider, isDark),
                     _buildPremiumTile(Icons.headset_mic_outlined, 'Help & Support', isDark, () {
