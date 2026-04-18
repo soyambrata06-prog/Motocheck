@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import '../../../data/models/bike_model.dart';
+import '../../core/providers/bike_provider.dart';
 import 'bike_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -12,46 +14,40 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _isSearching = false;
+  List<Bike> _filteredBikes = [];
 
-  // Mock data for internal use if provider is not used here
-  final List<Map<String, dynamic>> _mockCompanies = [
-    {
-      'name': 'KAWASAKI',
-      'bikes': [
-        {'name': 'Ninja ZX-10R', 'isScooter': false, 'year': 2023},
-        {'name': 'Z900', 'isScooter': false, 'year': 2022},
-      ]
-    },
-    {
-      'name': 'YAMAHA',
-      'bikes': [
-        {'name': 'R1M', 'isScooter': false, 'year': 2023},
-        {'name': 'MT-09', 'isScooter': false, 'year': 2022},
-        {'name': 'NMAX 155', 'isScooter': true, 'year': 2023},
-      ]
-    },
-    {
-      'name': 'DUCATI',
-      'bikes': [
-        {'name': 'Panigale V4', 'isScooter': false, 'year': 2023},
-        {'name': 'Streetfighter V4', 'isScooter': false, 'year': 2023},
-      ]
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
 
-  List<Map<String, dynamic>> _filteredBikes = [];
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   void _onSearchChanged(String query) {
+    final bikeProvider = Provider.of<BikeProvider>(context, listen: false);
     setState(() {
       _isSearching = query.isNotEmpty;
       if (_isSearching) {
-        _filteredBikes = _mockCompanies
-            .expand((c) => (c['bikes'] as List).map((b) => {
-                  ...Map<String, dynamic>.from(b),
-                  'company': c['name'] as String,
-                }))
-            .where((b) => b['name'].toString().toLowerCase().contains(query.toLowerCase()))
+        final q = query.toLowerCase();
+        _filteredBikes = bikeProvider.manufacturers
+            .expand((m) => m.bikes.map((b) => {'bike': b, 'manufacturer': m.name}))
+            .where((item) {
+              final bike = item['bike'] as Bike;
+              final manufacturer = item['manufacturer'] as String;
+              return bike.name.toLowerCase().contains(q) || 
+                     manufacturer.toLowerCase().contains(q);
+            })
+            .map((item) => item['bike'] as Bike)
             .toList();
       }
     });
@@ -134,6 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Center(
           child: TextField(
             controller: _searchController,
+            focusNode: _focusNode,
             onChanged: _onSearchChanged,
             textAlignVertical: TextAlignVertical.center,
             style: TextStyle(
@@ -142,12 +139,21 @@ class _SearchScreenState extends State<SearchScreen> {
               fontWeight: FontWeight.bold,
             ),
             decoration: InputDecoration(
-              hintText: 'Search bike model...',
+              hintText: 'Search bike model or manufacturer...',
               hintStyle: TextStyle(
                 color: primaryColor.withOpacity(0.24),
                 fontWeight: FontWeight.normal,
               ),
               prefixIcon: Icon(Icons.search, color: primaryColor.withOpacity(0.38), size: 28),
+              suffixIcon: _searchController.text.isNotEmpty 
+                  ? IconButton(
+                      icon: Icon(Icons.clear, color: primaryColor),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    )
+                  : null,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
@@ -158,6 +164,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildDirectory(bool isDark) {
+    final bikeProvider = Provider.of<BikeProvider>(context);
+    
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       physics: const BouncingScrollPhysics(),
@@ -172,15 +180,14 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        ..._mockCompanies.map((company) => _buildCompanyAccordion(isDark, company)),
+        ...bikeProvider.manufacturers.map((manufacturer) => _buildManufacturerAccordion(isDark, manufacturer)),
         const SizedBox(height: 100),
       ],
     );
   }
 
-  Widget _buildCompanyAccordion(bool isDark, Map<String, dynamic> company) {
+  Widget _buildManufacturerAccordion(bool isDark, Manufacturer manufacturer) {
     final primaryColor = isDark ? Colors.white : Colors.black;
-    final bikes = company['bikes'] as List;
 
     return Column(
       children: [
@@ -191,7 +198,7 @@ class _SearchScreenState extends State<SearchScreen> {
             iconColor: primaryColor,
             collapsedIconColor: primaryColor.withOpacity(0.5),
             title: Text(
-              company['name'],
+              manufacturer.name.toUpperCase(),
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.w900,
@@ -199,7 +206,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 letterSpacing: 0.5,
               ),
             ),
-            children: bikes.map((bike) => _buildBikeTile(isDark, bike, company['name'])).toList(),
+            children: manufacturer.bikes.map((bike) => _buildBikeTile(isDark, bike, manufacturer.name)).toList(),
           ),
         ),
         Divider(color: primaryColor.withOpacity(0.05), height: 1),
@@ -207,27 +214,27 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildBikeTile(bool isDark, Map<String, dynamic> bike, String companyName) {
+  Widget _buildBikeTile(bool isDark, Bike bike, String manufacturerName) {
     final primaryColor = isDark ? Colors.white : Colors.black;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _navigateToDetails(bike, companyName),
+          onTap: () => _navigateToDetails(bike, manufacturerName),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
             child: Row(
               children: [
                 Icon(
-                  bike['isScooter'] ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                  bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
                   color: primaryColor.withOpacity(0.3),
                   size: 16,
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  bike['name'],
+                  bike.name,
                   style: TextStyle(
                     color: primaryColor.withOpacity(0.8),
                     fontSize: 15,
@@ -290,17 +297,17 @@ class _SearchScreenState extends State<SearchScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  bike['isScooter'] ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                  bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
                   color: primaryColor.withOpacity(0.3),
                   size: 18,
                 ),
               ),
               title: Text(
-                bike['name'],
+                bike.name,
                 style: TextStyle(color: primaryColor, fontWeight: FontWeight.w800),
               ),
               subtitle: Text(
-                bike['company'],
+                bike.manufacturerId.toUpperCase(),
                 style: TextStyle(
                   color: primaryColor.withOpacity(0.38),
                   fontSize: 11,
@@ -309,7 +316,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               trailing: Icon(Icons.arrow_forward_ios_rounded, color: primaryColor.withOpacity(0.2), size: 14),
-              onTap: () => _navigateToDetails(bike, bike['company']),
+              onTap: () => _navigateToDetails(bike, bike.manufacturerId),
             ),
           ),
         );
@@ -317,13 +324,13 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  void _navigateToDetails(Map<String, dynamic> bikeData, String companyName) {
+  void _navigateToDetails(Bike bikeData, String companyName) {
     final bike = BikeModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: bikeData.id,
       plateNumber: 'N/A',
       make: companyName,
-      model: bikeData['name'],
-      year: bikeData['year'],
+      model: bikeData.name,
+      year: 2023,
     );
     
     Navigator.push(

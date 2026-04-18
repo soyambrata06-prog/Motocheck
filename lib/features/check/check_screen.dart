@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/bike_provider.dart';
 import 'result_screen.dart';
 import 'scan_plate_screen.dart';
+import 'search_screen.dart';
 
 class CheckScreen extends StatefulWidget {
   const CheckScreen({super.key});
@@ -15,7 +16,7 @@ class CheckScreen extends StatefulWidget {
 class _CheckScreenState extends State<CheckScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  bool _isSearching = false;
+  final bool _isSearching = false;
   bool _showManufacturers = false;
   List<Bike> _filteredBikes = [];
 
@@ -42,9 +43,17 @@ class _CheckScreenState extends State<CheckScreen> {
       if (query.isEmpty) {
         _filteredBikes = [];
       } else {
+        // IMPROVED: Search by both name and manufacturer name
         _filteredBikes = bikeProvider.manufacturers
-            .expand((c) => c.bikes)
-            .where((b) => b.name.toLowerCase().contains(query.toLowerCase()))
+            .expand((m) => m.bikes.map((b) => {'bike': b, 'manufacturer': m.name}))
+            .where((item) {
+              final bike = item['bike'] as Bike;
+              final manufacturer = item['manufacturer'] as String;
+              final q = query.toLowerCase();
+              return bike.name.toLowerCase().contains(q) || 
+                     manufacturer.toLowerCase().contains(q);
+            })
+            .map((item) => item['bike'] as Bike)
             .toList();
       }
     });
@@ -53,24 +62,12 @@ class _CheckScreenState extends State<CheckScreen> {
   void _handleSearch(String value) {
     if (value.isEmpty) return;
 
-    setState(() {
-      _isSearching = true;
-    });
-
-    // Mock search delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isSearching = false;
-        });
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResultScreen(plateNumber: value),
-          ),
-        );
-      }
-    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultScreen(plateNumber: value),
+      ),
+    );
   }
 
   @override
@@ -137,10 +134,12 @@ class _CheckScreenState extends State<CheckScreen> {
                         onChanged: _onSearchChanged,
                         onSubmitted: _handleSearch,
                         onTap: () {
-                          setState(() {
-                            _showManufacturers = true;
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SearchScreen()),
+                          );
                         },
+                        readOnly: true,
                         textAlignVertical: TextAlignVertical.center,
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black,

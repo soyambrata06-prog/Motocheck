@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:noise_meter/noise_meter.dart';
@@ -7,6 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../core/providers/bike_provider.dart';
 import '../../core/providers/sound_provider.dart';
 import '../../data/models/sound_test_model.dart';
@@ -29,6 +30,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
   double _totalDb = 0.0;
   
   bool _isMeasuring = false;
+  bool _isAnalyzing = false;
   NoiseMeter? _noiseMeter;
   StreamSubscription<NoiseReading>? _noiseSubscription;
   
@@ -42,6 +44,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
   late AnimationController _meterController;
   late Animation<double> _meterAnimation;
   late AnimationController _pulseController;
+  late AnimationController _headerController;
 
   @override
   void initState() {
@@ -60,11 +63,15 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+
+    _headerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
   }
 
   double get _currentLimit {
-    if (_selectedBike == null) return 95.0; // Default legal limit
-    // Some logic based on bike types
+    if (_selectedBike == null) return 95.0;
     if (_selectedBike!.isScooter) return 85.0;
     if (_selectedBike!.name.contains('Duke 390') || _selectedBike!.name.contains('RC 390')) return 92.0;
     if (_selectedBike!.name.contains('Classic 350')) return 90.0;
@@ -121,14 +128,14 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
       _stepResults.clear();
       _currentStep = 0;
       
-      // Fast, snappy reset animation
       _meterAnimation = Tween<double>(
         begin: _meterAnimation.value,
         end: 0,
       ).animate(CurvedAnimation(
         parent: _meterController,
-        curve: Curves.easeOutExpo,
+        curve: Curves.easeOutCirc,
       ));
+      _meterController.duration = const Duration(milliseconds: 100);
       _meterController.forward(from: 0);
     });
   }
@@ -137,11 +144,10 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     setState(() {
       _isMeasuring = true;
       _decibels = 0.0;
-      _peakDb = 0.0;
-      _avgDb = 0.0;
-      _measureCount = 0;
-      _totalDb = 0.0;
-      _stepResults.clear();
+      // Note: peak, avg, and step data are NOT reset here.
+      // This allows users to perform multiple measurement runs
+      // and keep the highest peak/accumulated average until 
+      // they explicitly hit the 'Reset' button.
       
       if (_currentMode == SoundCheckMode.rev) {
         _currentStep = 0;
@@ -150,6 +156,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
 
     try {
       _noiseSubscription = _noiseMeter?.noise.listen((NoiseReading noiseReading) {
+        if (!mounted) return;
         setState(() {
           _decibels = noiseReading.meanDecibel;
           if (_decibels > _peakDb) _peakDb = _decibels;
@@ -157,11 +164,14 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
           _measureCount++;
           _avgDb = _totalDb / _measureCount;
           
-          // Update animation
           _meterAnimation = Tween<double>(
             begin: _meterAnimation.value,
             end: _decibels,
-          ).animate(CurvedAnimation(parent: _meterController, curve: Curves.linear));
+          ).animate(CurvedAnimation(
+            parent: _meterController, 
+            curve: Curves.easeOutQuart
+          ));
+          _meterController.duration = const Duration(milliseconds: 150);
           _meterController.forward(from: 0);
         });
       }, onError: (Object error) {
@@ -176,21 +186,34 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     _noiseSubscription?.cancel();
     setState(() {
       _isMeasuring = false;
+      _isAnalyzing = true;
       _decibels = 0.0;
       _meterAnimation = Tween<double>(begin: _meterAnimation.value, end: 0).animate(_meterController);
       _meterController.forward(from: 0);
     });
+
+    // Simulate analysis delay for "high-fidelity" feel
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+        });
+      }
+    });
   }
 
   void _nextRevStep() {
-    setState(() {
-      _stepResults[_currentStep] = _decibels;
-      if (_currentStep < 2) {
+    if (_currentStep < 2) {
+      setState(() {
+        _stepResults[_currentStep] = _decibels;
         _currentStep++;
-      } else {
-        _stopMeasurement();
-      }
-    });
+      });
+    } else {
+      setState(() {
+        _stepResults[_currentStep] = _decibels;
+      });
+      _stopMeasurement();
+    }
   }
 
   void _showBikePicker() {
@@ -198,7 +221,6 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.white : Colors.black;
 
-    // Initialize controllers to manage accordion behavior (only one open at a time)
     final List<ExpansionTileController> controllers = List.generate(
       bikeProvider.manufacturers.length,
       (_) => ExpansionTileController(),
@@ -238,92 +260,129 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
                   color: primaryColor.withOpacity(0.4),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              // Search Bar inside Modal
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: TextField(
+                    onChanged: (value) {
+                      // Internal modal search logic or notify parent
+                    },
+                    style: TextStyle(color: primaryColor, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Search model...',
+                      hintStyle: TextStyle(color: primaryColor.withOpacity(0.2)),
+                      prefixIcon: Icon(Icons.search, color: primaryColor.withOpacity(0.3), size: 20),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: bikeProvider.manufacturers.length,
-                  itemBuilder: (context, mIndex) {
-                    final manufacturer = bikeProvider.manufacturers[mIndex];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: primaryColor.withOpacity(0.05)),
-                      ),
-                      child: Theme(
-                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          controller: controllers[mIndex],
-                          expansionAnimationStyle: AnimationStyle(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeInOutCubic,
-                          ),
-                          onExpansionChanged: (expanded) {
-                            if (expanded) {
-                              // Collapse all other tiles when one is opened
-                              for (int i = 0; i < controllers.length; i++) {
-                                if (i != mIndex) controllers[i].collapse();
-                              }
-                            }
-                          },
-                          iconColor: primaryColor.withOpacity(0.3),
-                          collapsedIconColor: primaryColor.withOpacity(0.3),
-                          title: Text(
-                            manufacturer.name.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.5,
-                              color: primaryColor,
+                child: bikeProvider.isLoading 
+                  ? _buildPickerShimmer(isDark)
+                  : AnimationLimiter(
+                      child: ListView.builder(
+                        controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: bikeProvider.manufacturers.length,
+                    itemBuilder: (context, mIndex) {
+                      final manufacturer = bikeProvider.manufacturers[mIndex];
+                      return AnimationConfiguration.staggeredList(
+                        position: mIndex,
+                        duration: const Duration(milliseconds: 375),
+                        child: SlideAnimation(
+                          verticalOffset: 50.0,
+                          child: FadeInAnimation(
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.03),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: primaryColor.withOpacity(0.05)),
+                              ),
+                              child: Theme(
+                                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  controller: controllers[mIndex],
+                                  expansionAnimationStyle: AnimationStyle(
+                                    duration: const Duration(milliseconds: 500),
+                                    curve: Curves.easeInOutCubic,
+                                  ),
+                                  onExpansionChanged: (expanded) {
+                                    if (expanded) {
+                                      for (int i = 0; i < controllers.length; i++) {
+                                        if (i != mIndex) controllers[i].collapse();
+                                      }
+                                    }
+                                  },
+                                  iconColor: primaryColor.withOpacity(0.3),
+                                  collapsedIconColor: primaryColor.withOpacity(0.3),
+                                  title: Text(
+                                    manufacturer.name.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                  children: manufacturer.bikes.map((bike) {
+                                    final isSelected = _selectedBike?.id == bike.id;
+                                    return ListTile(
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: (bike.isScooter ? Colors.orange : Colors.blue).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
+                                          color: bike.isScooter ? Colors.orange : Colors.blue,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        bike.name,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: primaryColor.withOpacity(isSelected ? 1.0 : 0.8),
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        bike.isScooter ? 'SCOOTER • 85dB LIMIT' : 'MOTORCYCLE • 95dB LIMIT',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryColor.withOpacity(0.4),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                      trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 20) : null,
+                                      onTap: () {
+                                        setState(() => _selectedBike = bike);
+                                        Navigator.pop(context);
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             ),
                           ),
-                          children: manufacturer.bikes.map((bike) {
-                            final isSelected = _selectedBike?.id == bike.id;
-                            return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: (bike.isScooter ? Colors.orange : Colors.blue).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
-                                  color: bike.isScooter ? Colors.orange : Colors.blue,
-                                  size: 20,
-                                ),
-                              ),
-                              title: Text(
-                                bike.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: primaryColor.withOpacity(isSelected ? 1.0 : 0.8),
-                                ),
-                              ),
-                              subtitle: Text(
-                                bike.isScooter ? 'SCOOTER • 85dB LIMIT' : 'MOTORCYCLE • 95dB LIMIT',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: primaryColor.withOpacity(0.4),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: Colors.green, size: 20) : null,
-                              onTap: () {
-                                setState(() => _selectedBike = bike);
-                                Navigator.pop(context);
-                              },
-                            );
-                          }).toList(),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
@@ -393,7 +452,6 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      // Fallback dialog
       if (!mounted) return;
       showDialog(
         context: context,
@@ -411,6 +469,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     _noiseSubscription?.cancel();
     _meterController.dispose();
     _pulseController.dispose();
+    _headerController.dispose();
     super.dispose();
   }
 
@@ -423,81 +482,94 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
       body: TweenAnimationBuilder<Color?>(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 300),
         tween: ColorTween(end: targetPrimaryColor),
         builder: (context, primaryColor, child) {
           final pColor = primaryColor ?? targetPrimaryColor;
           return SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
-                    child: _buildHeader(context, isDark, textColor),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildModeToggle(isDark, pColor),
-                  const SizedBox(height: 32),
-                  _buildSoundMeter(isDark, pColor),
-                  const SizedBox(height: 32),
-                  if (_selectedBike != null) ...[
-                    Text(
-                      '${_selectedBike!.name} • ${_selectedBike!.manufacturerId}'.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white54 : Colors.black54,
-                        letterSpacing: 1.2,
-                      ),
+            child: AnimationLimiter(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: AnimationConfiguration.toStaggeredList(
+                    duration: const Duration(milliseconds: 600),
+                    childAnimationBuilder: (widget) => SlideAnimation(
+                      verticalOffset: 20.0,
+                      child: FadeInAnimation(child: widget),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  _buildStartStopButton(isDark, pColor, targetPrimaryColor),
-                  const SizedBox(height: 32),
-                  _buildLiveDataRow(isDark),
-                  
-                  if (_currentMode == SoundCheckMode.rev && _isMeasuring) ...[
-                    const SizedBox(height: 32),
-                    _buildRevModeSteps(isDark, pColor),
-                  ],
-                  
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 800),
-                    switchInCurve: Curves.easeOutCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.1),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+                        child: _buildHeader(context, isDark, textColor),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(child: _buildModeToggle(isDark, pColor)),
+                      const SizedBox(height: 32),
+                      _buildSoundMeter(isDark, pColor),
+                      const SizedBox(height: 32),
+                      if (_selectedBike != null) ...[
+                        Text(
+                          '${_selectedBike!.name} • ${_selectedBike!.manufacturerId}'.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white54 : Colors.black54,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                      );
-                    },
-                    child: (!_isMeasuring && (_measureCount > 0 || _stepResults.isNotEmpty))
-                        ? Column(
-                            key: const ValueKey('results_block'),
-                            children: [
-                              const SizedBox(height: 32),
-                              _buildResultSection(isDark, pColor),
-                              const SizedBox(height: 24),
-                              _buildActions(isDark, pColor),
-                              const SizedBox(height: 16),
-                              _buildLegalComparison(isDark),
-                              const SizedBox(height: 16),
-                              _buildSuggestions(isDark),
-                              const SizedBox(height: 40),
-                              _buildDisclaimer(isDark),
-                            ],
-                          )
-                        : const SizedBox.shrink(),
+                        const SizedBox(height: 12),
+                      ],
+                      _buildStartStopButton(isDark, pColor),
+                      const SizedBox(height: 32),
+                      _buildLiveDataRow(isDark),
+                      
+                      if (_currentMode == SoundCheckMode.rev && _isMeasuring) ...[
+                        const SizedBox(height: 32),
+                        _buildRevModeSteps(isDark, pColor),
+                      ],
+                      
+                      if (_isAnalyzing) ...[
+                        const SizedBox(height: 32),
+                        _buildAnalysisShimmer(isDark),
+                      ],
+                      
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        switchInCurve: Curves.easeOutCubic,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.05),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: (!_isMeasuring && !_isAnalyzing && (_measureCount > 0 || _stepResults.isNotEmpty))
+                            ? Column(
+                                key: const ValueKey('results_block'),
+                                children: [
+                                  const SizedBox(height: 32),
+                                  _buildResultSection(isDark, pColor),
+                                  const SizedBox(height: 24),
+                                  _buildActions(isDark, pColor),
+                                  const SizedBox(height: 16),
+                                  _buildLegalComparison(isDark),
+                                  const SizedBox(height: 16),
+                                  _buildSuggestions(isDark),
+                                  const SizedBox(height: 40),
+                                  _buildDisclaimer(isDark),
+                                ],
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
-                  
-                  const SizedBox(height: 40),
-                ],
+                ),
               ),
             ),
           );
@@ -612,7 +684,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
                 color: isSelected ? Colors.white : (isDark ? Colors.white38 : Colors.black38),
-                fontFamily: 'Roboto', // Or whatever your default is
+                fontFamily: 'Roboto',
               ),
               child: Text(label),
             ),
@@ -626,20 +698,38 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     return AnimatedBuilder(
       animation: _meterAnimation,
       builder: (context, child) {
+        final val = _meterAnimation.value;
+        final dbColor = _getDecibelColor(val);
+        
         return Column(
           children: [
             Stack(
               alignment: Alignment.center,
               children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: dbColor.withOpacity(_isMeasuring ? 0.15 : 0.05),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      )
+                    ],
+                  ),
+                ),
                 SizedBox(
                   width: 280,
                   height: 280,
                   child: CustomPaint(
                     painter: MeterPainter(
-                      value: _meterAnimation.value,
+                      value: val,
                       max: 120,
                       isDark: isDark,
-                      color: _getDecibelColor(_meterAnimation.value),
+                      color: dbColor,
                       limit: _currentLimit,
                     ),
                   ),
@@ -647,13 +737,44 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      _meterAnimation.value.toStringAsFixed(1),
-                      style: TextStyle(fontSize: 72, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black, letterSpacing: -2, height: 1),
+                    Transform.scale(
+                      scale: _isMeasuring ? 1.0 + (val / 120 * 0.1) : 1.0,
+                      child: Text(
+                        val.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 72, 
+                          fontWeight: FontWeight.w900, 
+                          color: isDark ? Colors.white : Colors.black, 
+                          letterSpacing: -2, 
+                          height: 1
+                        ),
+                      ),
                     ),
-                    Text('dB', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: isDark ? Colors.white38 : Colors.black38)),
-                    const SizedBox(height: 8),
-                    Text('LIMIT: $_currentLimit dB', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: primaryColor)),
+                    Text(
+                      'dB', 
+                      style: TextStyle(
+                        fontSize: 20, 
+                        fontWeight: FontWeight.w900, 
+                        color: isDark ? Colors.white38 : Colors.black38
+                      )
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'LIMIT: ${_currentLimit.toInt()} dB', 
+                        style: TextStyle(
+                          fontSize: 11, 
+                          fontWeight: FontWeight.w900, 
+                          color: primaryColor,
+                          letterSpacing: 0.5,
+                        )
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -664,124 +785,183 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     );
   }
 
-  Widget _buildStartStopButton(bool isDark, Color pColor, Color targetColor) {
+  Widget _buildStartStopButton(bool isDark, Color pColor) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 800),
-      switchInCurve: Curves.elasticOut,
-      switchOutCurve: Curves.easeInBack,
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (Widget child, Animation<double> animation) {
-        final rotate = Tween<double>(begin: -0.1, end: 0.0).animate(animation);
         return FadeTransition(
           opacity: animation,
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.4, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.elasticOut),
+            scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
             ),
-            child: RotationTransition(
-              turns: rotate,
-              child: child,
-            ),
+            child: child,
           ),
         );
       },
       child: _selectedBike == null
-          ? GestureDetector(
-              key: const ValueKey('choose_bike'),
-              onTap: _showBikePicker,
-              child: AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) {
-                  final pulse = _pulseController.value;
-                  return Transform.scale(
-                    scale: 1.0 + (pulse * 0.03),
-                    child: Container(
-                      height: 84,
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white : Colors.black,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isDark ? Colors.white : Colors.black).withOpacity(0.2 + (pulse * 0.1)),
-                            blurRadius: 20 + (pulse * 10),
-                            offset: Offset(0, 8 + (pulse * 4)),
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.directions_bike_rounded,
-                            color: isDark ? Colors.black : Colors.white,
-                            size: 24 + (pulse * 2),
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            'CHOOSE YOUR BIKE',
-                            style: TextStyle(
-                              color: isDark ? Colors.black : Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 14,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+          ? _buildChooseBikeButton(isDark)
+          : _buildMeasureButton(isDark, pColor),
+    );
+  }
+
+  Widget _buildChooseBikeButton(bool isDark) {
+    return GestureDetector(
+      key: const ValueKey('choose_bike'),
+      onTap: _showBikePicker,
+      child: AnimatedBuilder(
+        animation: _pulseController,
+        builder: (context, child) {
+          final pulse = _pulseController.value;
+          return Transform.scale(
+            scale: 1.0 + (pulse * 0.02),
+            child: Container(
+              width: 240, 
+              height: 72,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white : Colors.black,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.15 + (pulse * 0.1)),
+                    blurRadius: 20 + (pulse * 10),
+                    offset: const Offset(0, 8),
+                  )
+                ],
               ),
-            )
-          : GestureDetector(
-              key: const ValueKey('start_stop'),
-              onTap: _toggleMeasurement,
-              child: AnimatedScale(
-                scale: _isMeasuring ? 1.15 : 1.0,
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.elasticOut,
-                child: TweenAnimationBuilder<Color?>(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  tween: ColorTween(
-                    end: _isMeasuring ? Colors.grey[900] : targetColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.directions_bike_rounded,
+                    color: isDark ? Colors.black : Colors.white,
+                    size: 22,
                   ),
-                  builder: (context, buttonColor, child) {
-                    final bColor = buttonColor ?? targetColor;
-                    return AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) {
-                        final pulseValue = _pulseController.value;
-                        return Container(
-                          width: 84,
-                          height: 84,
-                          decoration: BoxDecoration(
-                            color: bColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: bColor.withOpacity(_isMeasuring ? 0.3 + (0.2 * pulseValue) : 0.3),
-                                blurRadius: _isMeasuring ? 25 + (15 * pulseValue) : 20,
-                                spreadRadius: _isMeasuring ? 4 + (8 * pulseValue) : 2,
-                              )
-                            ],
-                          ),
-                          child: Center(
-                            child: Icon(
-                              _isMeasuring ? Icons.stop_rounded : Icons.mic_rounded,
-                              color: Colors.white,
-                              size: 38,
-                            ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'CHOOSE BIKE',
+                    style: TextStyle(
+                      color: isDark ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMeasureButton(bool isDark, Color bColor) {
+    return GestureDetector(
+      key: const ValueKey('start_stop'),
+      onTap: _toggleMeasurement,
+      child: AnimatedBuilder(
+        animation: _pulseController,
+        builder: (context, child) {
+          final pulseValue = _pulseController.value;
+          final buttonColor = _isMeasuring ? Colors.grey[900]! : bColor;
+          
+          return AnimatedScale(
+            scale: _isMeasuring ? 1.05 : 1.0 + (pulseValue * 0.02),
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              width: 240, 
+              height: 72,
+              decoration: BoxDecoration(
+                color: buttonColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: buttonColor.withOpacity(0.3 + (0.2 * pulseValue)),
+                    blurRadius: _isMeasuring ? 25 + (15 * pulseValue) : 20,
+                    spreadRadius: _isMeasuring ? 2 : 0,
+                    offset: const Offset(0, 8),
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _isMeasuring ? Icons.stop_rounded : Icons.mic_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 60, 
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+                        return Stack(
+                          alignment: Alignment.centerLeft, 
+                          children: <Widget>[
+                            ...previousChildren,
+                            if (currentChild != null) currentChild,
+                          ],
+                        );
+                      },
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        final isEntering = (child.key as ValueKey<bool>).value == _isMeasuring;
+                        
+                        final curvedAnimation = CurvedAnimation(
+                          parent: animation,
+                          curve: const Interval(0.0, 1.0, curve: Curves.elasticOut),
+                          reverseCurve: Curves.easeInBack,
+                        );
+
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: isEntering ? const Offset(0.0, -1.2) : const Offset(0.0, 1.2),
+                              end: Offset.zero,
+                            ).animate(curvedAnimation),
+                            child: child,
                           ),
                         );
                       },
-                    );
-                  },
-                ),
+                      child: Text(
+                        _isMeasuring ? 'STOP' : 'START',
+                        key: ValueKey(_isMeasuring),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'CHECK',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ),
+          );
+        },
+      ),
     );
   }
+
 
   Widget _buildLiveDataRow(bool isDark) {
     return Padding(
@@ -802,8 +982,30 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
   Widget _buildLiveDataItem(String label, String value, bool isDark) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black)),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isDark ? Colors.white24 : Colors.black26, letterSpacing: 1)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: Text(
+            value, 
+            key: ValueKey(value),
+            style: TextStyle(
+              fontSize: 22, 
+              fontWeight: FontWeight.w900, 
+              color: isDark ? Colors.white : Colors.black
+            )
+          ),
+        ),
+        Text(
+          label, 
+          style: TextStyle(
+            fontSize: 10, 
+            fontWeight: FontWeight.w800, 
+            color: isDark ? Colors.white24 : Colors.black26, 
+            letterSpacing: 1
+          )
+        ),
       ],
     );
   }
@@ -814,44 +1016,319 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
 
   Widget _buildRevModeSteps(bool isDark, Color primaryColor) {
     final steps = ['IDLE', 'MID-REV', 'PEAK-REV'];
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: isDark ? const Color(0xFF111111) : Colors.grey[50], borderRadius: BorderRadius.circular(28), border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05))),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(3, (index) {
-              final isActive = _currentStep == index;
-              final isCompleted = _currentStep > index;
-              return Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28, height: 28,
-                      decoration: BoxDecoration(color: isCompleted ? Colors.green : (isActive ? primaryColor : (isDark ? Colors.white10 : Colors.black.withOpacity(0.1))), shape: BoxShape.circle),
-                      child: Center(child: isCompleted ? const Icon(Icons.check, size: 16, color: Colors.white) : Text('${index + 1}', style: TextStyle(color: isActive ? Colors.white : (isDark ? Colors.white38 : Colors.black38), fontWeight: FontWeight.bold))),
+    final instructions = [
+      'Keep the bike at steady idle. We are measuring the baseline noise.',
+      'Rev the engine to approximately 50% of its RPM range.',
+      'Perform a full rev to capture the maximum exhaust note.'
+    ];
+
+    final stepColors = [
+      const Color(0xFF4CAF50), // Green for Idle
+      const Color(0xFFFFC107), // Amber for Mid
+      const Color(0xFFFF5252), // Red for Peak
+    ];
+
+    final currentStageColor = stepColors[_currentStep];
+    final textColor = isDark ? Colors.white : Colors.black;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      switchInCurve: Curves.easeOutBack,
+      switchOutCurve: Curves.easeInQuint,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.2, 0.0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        key: ValueKey(_currentStep),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: currentStageColor.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: currentStageColor.withOpacity(0.1),
+              blurRadius: 40,
+              offset: const Offset(0, 20),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.5 : 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Stack(
+            children: [
+              // Subtle background gradient reflecting the stage
+              Positioned(
+                right: -50,
+                top: -50,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        currentStageColor.withOpacity(0.15),
+                        currentStageColor.withOpacity(0),
+                      ],
                     ),
-                    if (index < 2) Expanded(child: Container(height: 2, color: isCompleted ? Colors.green : (isDark ? Colors.white10 : Colors.black.withOpacity(0.1)))),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(30),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Step Indicator Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(3, (index) {
+                        final isActive = _currentStep == index;
+                        final isCompleted = _currentStep > index;
+                        final color = isCompleted
+                            ? Colors.green
+                            : (isActive ? currentStageColor : textColor.withOpacity(0.1));
+
+                        return Row(
+                          children: [
+                            Column(
+                              children: [
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    if (isActive)
+                                      _buildPulseRing(currentStageColor),
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 400),
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: isDark ? Colors.black : Colors.white,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: color,
+                                          width: isActive ? 3 : 2,
+                                        ),
+                                        boxShadow: isActive ? [
+                                          BoxShadow(
+                                            color: color.withOpacity(0.3),
+                                            blurRadius: 10,
+                                          )
+                                        ] : [],
+                                      ),
+                                      child: Center(
+                                        child: isCompleted
+                                            ? const Icon(Icons.check_rounded, size: 24, color: Colors.green)
+                                            : Text(
+                                                '${index + 1}',
+                                                style: TextStyle(
+                                                  color: isActive ? textColor : textColor.withOpacity(0.3),
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  ['IDLE', 'MID', 'PEAK'][index],
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                    color: isActive ? color : textColor.withOpacity(0.2),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (index < 2)
+                              Container(
+                                width: 40,
+                                height: 3,
+                                margin: const EdgeInsets.only(bottom: 18, left: 8, right: 8),
+                                decoration: BoxDecoration(
+                                  color: textColor.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: OverflowBox(
+                                  alignment: Alignment.centerLeft,
+                                  maxWidth: 40,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 600),
+                                    width: isCompleted ? 40 : 0,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 32),
+                    // Current DB Bar for the stage
+                    Container(
+                      height: 60,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: textColor.withOpacity(0.03),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.graphic_eq_rounded, color: currentStageColor, size: 20),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'LIVE INTENSITY',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1,
+                                        color: textColor.withOpacity(0.4),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${_decibels.toStringAsFixed(1)} dB',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w900,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: LinearProgressIndicator(
+                                    value: (_decibels / 120).clamp(0, 1),
+                                    backgroundColor: textColor.withOpacity(0.05),
+                                    valueColor: AlwaysStoppedAnimation<Color>(currentStageColor),
+                                    minHeight: 6,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      steps[_currentStep],
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        instructions[_currentStep],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: textColor.withOpacity(0.6),
+                          height: 1.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Action Button
+                    GestureDetector(
+                      onTap: _nextRevStep,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                        decoration: BoxDecoration(
+                          color: currentStageColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: currentStageColor.withOpacity(0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _currentStep < 2 ? 'NEXT STAGE' : 'FINISH TEST',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              );
-            }),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          Text(steps[_currentStep], style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: primaryColor, letterSpacing: 2)),
-          const SizedBox(height: 16),
-          _buildActionBtn(
-            _currentStep < 2 ? 'NEXT: ${steps[_currentStep + 1]}' : 'FINISH TEST',
-            _currentStep < 2 ? Icons.arrow_forward_rounded : Icons.check_circle_rounded,
-            isDark,
-            primaryColor,
-            true,
-            _nextRevStep,
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildPulseRing(Color color) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Container(
+          width: 44 + (_pulseController.value * 20),
+          height: 44 + (_pulseController.value * 20),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: color.withOpacity(1.0 - _pulseController.value),
+              width: 2,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -936,6 +1413,61 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     );
   }
 
+  Widget _buildPickerShimmer(bool isDark) {
+    final baseColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final highlightColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: 6,
+        itemBuilder: (_, __) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalysisShimmer(bool isDark) {
+    final baseColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final highlightColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: Column(
+          children: [
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(child: Container(height: 60, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)))),
+                const SizedBox(width: 16),
+                Expanded(child: Container(height: 60, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildActions(bool isDark, Color primaryColor) {
     final hasData = _measureCount > 0 || _stepResults.isNotEmpty;
     final isIllegal = hasData && _peakDb > _currentLimit;
@@ -1007,21 +1539,64 @@ class MeterPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    const strokeWidth = 14.0;
+    const strokeWidth = 12.0;
 
-    // Base Track
-    final paintBase = Paint()..color = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round;
+    final paintGlow = Paint()
+      ..color = color.withOpacity(0.05)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth + 8
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius - strokeWidth / 2), math.pi * 0.75, math.pi * 1.5, false, paintGlow);
+
+    final paintBase = Paint()
+      ..color = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
     canvas.drawArc(Rect.fromCircle(center: center, radius: radius - strokeWidth / 2), math.pi * 0.75, math.pi * 1.5, false, paintBase);
 
-    // Limit Line
     final limitAngle = math.pi * 0.75 + (limit / max) * math.pi * 1.5;
-    final paintLimit = Paint()..color = Colors.red.withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = 4;
-    canvas.drawArc(Rect.fromCircle(center: center, radius: radius - strokeWidth / 2), limitAngle - 0.02, 0.04, false, paintLimit);
+    final paintLimit = Paint()
+      ..color = Colors.red.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    
+    final tickInner = Offset(
+      center.dx + (radius - strokeWidth - 5) * math.cos(limitAngle),
+      center.dy + (radius - strokeWidth - 5) * math.sin(limitAngle),
+    );
+    final tickOuter = Offset(
+      center.dx + (radius + 5) * math.cos(limitAngle),
+      center.dy + (radius + 5) * math.sin(limitAngle),
+    );
+    canvas.drawLine(tickInner, tickOuter, paintLimit);
 
-    // Value Track
-    final paintValue = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = strokeWidth..strokeCap = StrokeCap.round;
+    final paintValue = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    
     final sweepAngle = (value / max) * math.pi * 1.5;
-    canvas.drawArc(Rect.fromCircle(center: center, radius: radius - strokeWidth / 2), math.pi * 0.75, sweepAngle.clamp(0.01, math.pi * 1.5), false, paintValue);
+    if (sweepAngle > 0.01) {
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius - strokeWidth / 2), math.pi * 0.75, sweepAngle.clamp(0.01, math.pi * 1.5), false, paintValue);
+    }
+    
+    if (value > 0) {
+      final endAngle = math.pi * 0.75 + sweepAngle;
+      final endPoint = Offset(
+        center.dx + (radius - strokeWidth / 2) * math.cos(endAngle),
+        center.dy + (radius - strokeWidth / 2) * math.sin(endAngle),
+      );
+      
+      final paintEnd = Paint()..color = Colors.white..style = PaintingStyle.fill;
+      canvas.drawCircle(endPoint, 4, paintEnd);
+      
+      final paintEndStroke = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 2;
+      canvas.drawCircle(endPoint, 5, paintEndStroke);
+    }
   }
 
   @override

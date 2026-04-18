@@ -1,7 +1,14 @@
+import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import '../models/bike_model.dart';
 
 class VehicleService {
+  // Base configuration for future real API integration
+  // final String _baseUrl = 'https://vahan-api.example.com/v1';
+  // final String _apiKey = 'YOUR_API_KEY';
+
   final List<String> _models = [
     'Duke 390', 'Classic 350', 'MT-15', 'R15 V4', 'Pulsar NS200', 
     'Apache RTR 200', 'Himalayan 450', 'Ninja 300', 'RC 390', 'Dominar 400'
@@ -58,35 +65,55 @@ class VehicleService {
     },
   };
 
+  /// Fetches vehicle details. Currently mocks data but structured for real API integration.
   Future<BikeModel?> getVehicleDetails(String plateNumber) async {
-    // Simulate API delay
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // In a real implementation:
+      // final response = await http.get(
+      //   Uri.parse('$_baseUrl/vehicle?plate=$plateNumber'),
+      //   headers: {'Authorization': 'Bearer $_apiKey'},
+      // );
+      // if (response.statusCode == 200) {
+      //   return BikeModel.fromJson(jsonDecode(response.body));
+      // }
+      
+      // MOCK IMPLEMENTATION
+      await Future.delayed(const Duration(milliseconds: 1200));
 
-    // For demo purposes, we return a random bike if the plate is validly formatted
-    // In a real app, this would call Vahan API or a backend
-    final random = Random();
-    final model = _models[random.nextInt(_models.length)];
-    final make = _modelToMake[model] ?? 'Unknown';
-    final specs = _modelSpecs[model] ?? {
-      'engineSize': 'Unknown',
-      'power': 'Unknown',
-      'weight': 'Unknown',
-      'topSpeed': 'Unknown',
-      'dbLimit': 85.0,
-    };
+      final random = Random();
+      final model = _models[random.nextInt(_models.length)];
+      final make = _modelToMake[model] ?? 'Unknown';
+      final specs = _modelSpecs[model] ?? {
+        'engineSize': 'Unknown',
+        'power': 'Unknown',
+        'weight': 'Unknown',
+        'topSpeed': 'Unknown',
+        'dbLimit': 85.0,
+      };
 
-    return BikeModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      plateNumber: plateNumber,
-      model: model,
-      make: make,
-      year: 2020 + random.nextInt(5),
-      engineSize: specs['engineSize'],
-      power: specs['power'],
-      weight: specs['weight'],
-      topSpeed: specs['topSpeed'],
-      dbLimit: specs['dbLimit'],
-      isLegal: random.nextDouble() > 0.2, // 80% chance of being legal
-    );
+      return BikeModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        plateNumber: plateNumber.toUpperCase(),
+        model: model,
+        make: make,
+        year: 2020 + random.nextInt(5),
+        engineSize: specs['engineSize'],
+        power: specs['power'],
+        weight: specs['weight'],
+        topSpeed: specs['topSpeed'],
+        dbLimit: specs['dbLimit'],
+        isLegal: random.nextDouble() > 0.2, // 80% chance of being legal
+      );
+    } catch (e) {
+      debugPrint('VehicleService Error: $e');
+      return null;
+    }
+  }
+
+  /// Placeholder for future Vahan API validation
+  Future<bool> validatePlate(String plateNumber) async {
+    // Basic regex for Indian number plates
+    final regExp = RegExp(r'^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$');
+    return regExp.hasMatch(plateNumber.toUpperCase().replaceAll(' ', ''));
   }
 }

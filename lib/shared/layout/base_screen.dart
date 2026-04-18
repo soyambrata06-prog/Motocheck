@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/navigation_provider.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/check/check_screen.dart';
 import '../../features/sos/sos_screen.dart';
@@ -13,8 +15,6 @@ class BaseScreen extends StatefulWidget {
 }
 
 class _BaseScreenState extends State<BaseScreen> {
-  int _currentIndex = 0;
-
   final List<Widget> _screens = [
     const HomeScreen(),
     const CheckScreen(),
@@ -22,22 +22,18 @@ class _BaseScreenState extends State<BaseScreen> {
     const ProfileScreen(),
   ];
 
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final navProvider = Provider.of<NavigationProvider>(context);
+    
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: navProvider.selectedIndex,
         children: _screens,
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
+        currentIndex: navProvider.selectedIndex,
+        onTap: (index) => navProvider.setIndex(index),
       ),
     );
   }
