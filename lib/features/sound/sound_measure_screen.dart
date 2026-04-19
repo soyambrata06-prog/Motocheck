@@ -11,6 +11,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../core/providers/bike_provider.dart';
 import '../../core/providers/sound_provider.dart';
 import '../../data/models/sound_test_model.dart';
+import 'sound_report_screen.dart';
 
 enum SoundCheckMode { normal, rev }
 
@@ -33,16 +34,13 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
   bool _isAnalyzing = false;
   NoiseMeter? _noiseMeter;
   StreamSubscription<NoiseReading>? _noiseSubscription;
-  
-  // Rev Mode State
+
   int _currentStep = 0; // 0: Idle, 1: Mid, 2: Peak
   final Map<int, double> _stepResults = {};
 
   Bike? _selectedBike;
-  
-  // Animations
+
   late AnimationController _meterController;
-  late Animation<double> _meterAnimation;
   late AnimationController _pulseController;
   late AnimationController _headerController;
 
@@ -54,9 +52,6 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     _meterController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
-    );
-    _meterAnimation = Tween<double>(begin: 0, end: 0).animate(
-      CurvedAnimation(parent: _meterController, curve: Curves.easeOutCubic),
     );
 
     _pulseController = AnimationController(
@@ -150,8 +145,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     try {
       _noiseSubscription = _noiseMeter?.noise.listen((NoiseReading noiseReading) {
         if (!mounted) return;
-        
-        // Ensure we don't process NaN
+
         double db = noiseReading.meanDecibel;
         if (db.isNaN || db.isInfinite) db = 0.0;
 
@@ -179,7 +173,6 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
       _decibels = _peakDb; 
     });
 
-    // Simulate analysis delay for "high-fidelity" feel
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         setState(() {
@@ -253,7 +246,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Search Bar inside Modal
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Container(
@@ -410,11 +403,10 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     await Provider.of<SoundProvider>(context, listen: false).saveTest(testResult);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Test results saved to your profile'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SoundReportScreen(testResult: testResult),
         ),
       );
     }
@@ -784,8 +776,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
               ? _buildChooseBikeButton(isDark)
               : _buildMeasureButton(isDark, pColor),
         ),
-        
-        // Report Button (Only visible after a test is done)
+
         if (!_isMeasuring && (_measureCount > 0 || _stepResults.isNotEmpty))
           _buildReportAction(isDark),
       ],
@@ -802,7 +793,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
             padding: const EdgeInsets.only(top: 24),
             child: TextButton.icon(
               onPressed: () {
-                // TODO: Navigate to full report screen
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Generating detailed report...')),
                 );
@@ -1092,7 +1083,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Step Indicator Row
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(3, (index) {
@@ -1202,7 +1193,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // Action Button
+
                   GestureDetector(
                     onTap: _nextRevStep,
                     child: AnimatedContainer(
@@ -1307,7 +1298,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
             ],
           ),
           const SizedBox(height: 32),
-          // Live waveform-like indicator
+
           SizedBox(
             height: 40,
             child: Row(
@@ -1575,7 +1566,6 @@ class MeterPainter extends CustomPainter {
 
     final rect = Rect.fromCircle(center: center, radius: radius - strokeWidth / 2);
 
-    // Full spectrum colors
     final gradientColors = [
       Colors.green,
       Colors.green,   // Start buffer
@@ -1584,15 +1574,13 @@ class MeterPainter extends CustomPainter {
       Colors.red,
       Colors.red,     // End buffer
     ];
-    
-    // Calculate stops to perfectly align with the 270-degree arc
-    // while moving the "wrap point" (0.0/1.0) into the 90-degree gap at the bottom.
-    // The gap center is at 6 o'clock (0.5 * pi).
-    // The arc starts at 0.75 * pi and ends at 2.25 * pi.
-    final gradientStops = [0.0, 0.125, 0.3875, 0.65, 0.875, 1.0];
-    final rotation = const GradientRotation(math.pi * 0.5);
 
-    // Harmonized Background track (Gradient at 18% opacity)
+
+
+
+    const gradientStops = [0.0, 0.125, 0.3875, 0.65, 0.875, 1.0];
+    const rotation = GradientRotation(math.pi * 0.5);
+
     final paintBase = Paint()
       ..shader = SweepGradient(
         center: Alignment.center,
@@ -1606,7 +1594,6 @@ class MeterPainter extends CustomPainter {
     
     canvas.drawArc(rect, startAngle, totalSweep, false, paintBase);
 
-    // Active Value Arc (Full 100% Opacity Gradient)
     final paintValue = Paint()
       ..shader = SweepGradient(
         center: Alignment.center,
@@ -1617,9 +1604,8 @@ class MeterPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
-    
-    // Ensure a visible piece of the active bar is always behind the knob
-    // even at 0 dB, so the knob has a solid colored background.
+
+
     final valueSweep = (value / max) * totalSweep;
     canvas.drawArc(
       rect, 
@@ -1628,16 +1614,14 @@ class MeterPainter extends CustomPainter {
       false, 
       paintValue
     );
-    
-    // Professional Technical Knob (Hardware-grade design)
-    // Removed if (value > 0) to ensure knob is always visible at the start/reset point
+
+
     final endAngle = startAngle + valueSweep;
     final endPoint = Offset(
       center.dx + (radius - strokeWidth / 2) * math.cos(endAngle),
       center.dy + (radius - strokeWidth / 2) * math.sin(endAngle),
     );
-    
-    // 1. Subtle drop shadow for depth
+
     canvas.drawCircle(
       endPoint.translate(0, 1.5), 
       6, 
@@ -1646,14 +1630,12 @@ class MeterPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3)
     );
 
-    // 2. Pure White Hardware Knob
     canvas.drawCircle(
       endPoint, 
       6.0, 
       Paint()..color = Colors.white
     );
 
-    // 3. Dynamic Technical Outline (Matches Precise Gradient Position)
     canvas.drawCircle(
       endPoint, 
       6.0, 
@@ -1662,8 +1644,7 @@ class MeterPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5
     );
-    
-    // 4. Subtle Outer Aura (Matching Color)
+
     canvas.drawCircle(
       endPoint, 
       7.5, 

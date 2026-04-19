@@ -47,7 +47,6 @@ class BikeProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   BikeProvider() {
-    // Initialize with default data for instant display
     _initializeDefaultData();
     fetchData();
   }
@@ -85,24 +84,19 @@ class BikeProvider extends ChangeNotifier {
   }
 
   Future<void> fetchData() async {
-    // Only show loading if we don't have any data yet
     if (_manufacturers.isEmpty) {
       _isLoading = true;
       notifyListeners();
     }
 
     try {
-      // 1. Sync database in background (adds missing entries)
       await _seedDatabase();
 
-      // 2. Fetch Manufacturers
       QuerySnapshot mSnap = await _db.collection('manufacturers').orderBy('name').get();
 
-      // 3. Fetch all Bikes
       QuerySnapshot bSnap = await _db.collection('bikes').orderBy('name').get();
       List<Bike> allBikes = bSnap.docs.map((doc) => Bike.fromFirestore(doc)).toList();
 
-      // 4. Map Bikes to Manufacturers
       _manufacturers = mSnap.docs.map((mDoc) {
         List<Bike> manufacturerBikes = allBikes.where((b) => b.manufacturerId == mDoc.id).toList();
         return Manufacturer.fromFirestore(mDoc, manufacturerBikes);
@@ -131,7 +125,6 @@ class BikeProvider extends ChangeNotifier {
     WriteBatch batch = _db.batch();
 
     for (var company in companies.keys) {
-      // Check if manufacturer already exists to avoid duplicates
       QuerySnapshot existing = await _db.collection('manufacturers')
           .where('name', isEqualTo: company)
           .get();
@@ -145,7 +138,6 @@ class BikeProvider extends ChangeNotifier {
       }
 
       for (var bikeName in companies[company]!) {
-        // Check if bike already exists
         QuerySnapshot existingBike = await _db.collection('bikes')
             .where('name', isEqualTo: bikeName)
             .where('manufacturerId', isEqualTo: mRef.id)

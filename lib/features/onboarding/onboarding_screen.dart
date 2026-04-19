@@ -14,7 +14,7 @@ class OnboardingScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Navigate to home or login
+
               },
               child: const Text('Get Started'),
             ),

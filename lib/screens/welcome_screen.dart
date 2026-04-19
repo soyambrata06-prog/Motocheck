@@ -22,7 +22,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     setState(() => _isLoading = true);
     try {
       await _authService.signInWithGoogle();
-      // AuthWrapper in main.dart handles navigation
+
     } catch (e) {
       debugPrint('Google Sign-In Error: $e');
       if (mounted) {
@@ -51,7 +51,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Spacer(flex: 2),
-                  // Logo Section
+
                   Center(
                     child: Text(
                       'motocheck',
@@ -64,8 +64,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                   ),
                   const Spacer(flex: 2),
-                  
-                  // Action Buttons
+
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
@@ -132,8 +131,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 32),
-                  
-                  // Social Login
+
                   Row(
                     children: [
                       Expanded(

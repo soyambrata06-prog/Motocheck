@@ -88,10 +88,10 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
               alignment: Alignment.center,
               clipBehavior: Clip.none,
               children: [
-                // Radial Pulse Animation (Behind Button)
+
                 if (_isHolding)
                   ...List.generate(3, (index) {
-                    // Stagger the pulses
+
                     double pulseProgress = (_controller.value * 2.5 - (index * 0.4)).clamp(0.0, 1.0);
                     if (pulseProgress <= 0) return const SizedBox.shrink();
                     
@@ -111,7 +111,6 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
                     );
                   }),
 
-                // Expanding Solid Glow (Behind Button)
                 if (_isHolding)
                   Transform.scale(
                     scale: 1.0 + (0.2 * _controller.value),
@@ -124,8 +123,7 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
                       ),
                     ),
                   ),
-                
-                // Main Button
+
                 Transform.scale(
                   scale: _isHolding ? scale : 1.0,
                   child: Container(

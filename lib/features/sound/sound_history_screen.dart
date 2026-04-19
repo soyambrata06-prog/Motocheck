@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../../core/theme_provider.dart';
 import '../../core/providers/sound_provider.dart';
 import '../../data/models/sound_test_model.dart';
+import 'sound_report_screen.dart';
 
 class SoundHistoryScreen extends StatelessWidget {
   const SoundHistoryScreen({super.key});
@@ -19,7 +20,6 @@ class SoundHistoryScreen extends StatelessWidget {
       backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
       body: Stack(
         children: [
-          // Background Depth Glow
           if (isDark)
             Positioned(
               top: -100,
@@ -165,123 +165,133 @@ class SoundHistoryScreen extends StatelessWidget {
     final yearStr = DateFormat('yyyy').format(test.timestamp);
     final timeStr = DateFormat('hh:mm a').format(test.timestamp);
     
-    return Dismissible(
-      key: Key(test.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFF5252).withOpacity(0.15),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFFF5252), size: 32),
-      ),
-      onDismissed: (_) {
-        Provider.of<SoundProvider>(context, listen: false).deleteTest(test.id);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: primaryColor.withOpacity(isDark ? 0.08 : 0.05),
-            width: 1,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Dismissible(
+        key: Key(test.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF5252),
+            borderRadius: BorderRadius.circular(24),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24),
+          child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 32),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Left Status Bar
-                Container(
-                  width: 8,
-                  color: statusColor.withOpacity(0.8),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(22),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  '$dateStr, $yearStr',
-                                  style: TextStyle(
-                                    color: primaryColor.withOpacity(0.4),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                Text(
-                                  timeStr,
-                                  style: TextStyle(
-                                    color: primaryColor.withOpacity(0.4),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            _buildStatusBadge(test.isPass, statusColor),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          test.bikeName.toUpperCase(),
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          test.manufacturer.toUpperCase(),
-                          style: TextStyle(
-                            color: primaryColor.withOpacity(0.3),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            _buildMetric('PEAK', '${test.peakDb.toInt()}', 'dB', statusColor, primaryColor),
-                            const SizedBox(width: 40),
-                            _buildMetric('LIMIT', '${test.limitDb.toInt()}', 'dB', primaryColor.withOpacity(0.7), primaryColor),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+        onDismissed: (_) {
+          Provider.of<SoundProvider>(context, listen: false).deleteTest(test.id);
+        },
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SoundReportScreen(testResult: test),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: primaryColor.withOpacity(isDark ? 0.08 : 0.05),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      color: statusColor.withOpacity(0.8),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(22),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      '$dateStr, $yearStr',
+                                      style: TextStyle(
+                                        color: primaryColor.withOpacity(0.4),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                                      width: 4,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    Text(
+                                      timeStr,
+                                      style: TextStyle(
+                                        color: primaryColor.withOpacity(0.4),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                _buildStatusBadge(test.isPass, statusColor),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              test.bikeName.toUpperCase(),
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              test.manufacturer.toUpperCase(),
+                              style: TextStyle(
+                                color: primaryColor.withOpacity(0.3),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                _buildMetric('PEAK', '${test.peakDb.toInt()}', 'dB', statusColor, primaryColor),
+                                const SizedBox(width: 40),
+                                _buildMetric('LIMIT', '${test.limitDb.toInt()}', 'dB', primaryColor.withOpacity(0.7), primaryColor),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

@@ -21,7 +21,7 @@ class SoundProvider extends ChangeNotifier {
 
   Future<void> _init() async {
     await loadHistory();
-    // Listen to auth changes to reload history when user signs in/out
+
     _auth.authStateChanges().listen((user) {
       loadHistory();
     });
@@ -31,7 +31,6 @@ class SoundProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // 1. Load from SharedPreferences first for instant UI
     final prefs = await SharedPreferences.getInstance();
     final localData = prefs.getStringList('sound_test_history') ?? [];
     _history = localData
@@ -41,7 +40,6 @@ class SoundProvider extends ChangeNotifier {
         .toList();
     notifyListeners();
 
-    // 2. Sync with Firebase if user is logged in
     final user = _auth.currentUser;
     if (user != null) {
       try {
@@ -56,7 +54,6 @@ class SoundProvider extends ChangeNotifier {
             .map((doc) => SoundTestModel.fromJson(doc.data()))
             .toList();
 
-        // Merge and migrate local data to cloud if needed
         if (localData.isNotEmpty) {
           await _migrateLocalToCloud(user.uid, _history);
           await prefs.remove('sound_test_history');
@@ -87,7 +84,7 @@ class SoundProvider extends ChangeNotifier {
 
     final user = _auth.currentUser;
     if (user != null) {
-      // Save to Firebase
+
       try {
         await _db
             .collection('users')
@@ -97,11 +94,11 @@ class SoundProvider extends ChangeNotifier {
             .set(test.toJson());
       } catch (e) {
         debugPrint('Error saving test to Firebase: $e');
-        // Fallback to local if Firebase fails?
+
         await _saveLocally(test);
       }
     } else {
-      // Save only locally if not logged in
+
       await _saveLocally(test);
     }
   }

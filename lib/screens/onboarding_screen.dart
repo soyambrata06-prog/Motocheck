@@ -52,7 +52,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Shared Background Image for Page 2 & 3
+
             AnimatedBuilder(
               animation: _pageController,
               builder: (context, child) {
@@ -61,15 +61,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   page = _pageController.page ?? 0;
                 }
 
-                // Unified linear movement: The bike is pinned to the background
-                // and moves 1:1 with the scroll for a perfect "pinned" effect.
+
                 double translationX = 1.56 - page;
                 double opacity = 0;
 
-                // Optimizing visibility during Page 1 -> Page 2 transition
-                // The bike now fades in faster and slides from the right edge
+
                 if (page < 1.0) {
-                  // Fade in quickly so it's visible earlier in the transition
+
                   opacity = (page * 1.8).clamp(0.0, 1.0);
                 } else {
                   opacity = 1.0;
@@ -125,7 +123,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
 
-            // UI Controls
             _buildUIControls(context),
           ],
         ),

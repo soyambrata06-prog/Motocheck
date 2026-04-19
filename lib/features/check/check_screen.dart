@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/bike_provider.dart';
+import '../sound/sound_history_screen.dart';
+import '../stats/stats_screen.dart';
 import 'result_screen.dart';
 import 'scan_plate_screen.dart';
 import 'search_screen.dart';
@@ -43,7 +45,6 @@ class _CheckScreenState extends State<CheckScreen> {
       if (query.isEmpty) {
         _filteredBikes = [];
       } else {
-        // IMPROVED: Search by both name and manufacturer name
         _filteredBikes = bikeProvider.manufacturers
             .expand((m) => m.bikes.map((b) => {'bike': b, 'manufacturer': m.name}))
             .where((item) {
@@ -83,157 +84,151 @@ class _CheckScreenState extends State<CheckScreen> {
       },
       child: Scaffold(
         backgroundColor: isDark ? Colors.black : Colors.white,
-        body: RepaintBoundary(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 60),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DATABASE',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                          color: isDark ? Colors.white38 : Colors.black38,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'SEARCH',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: isDark ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-                  Container(
-                    height: 70, 
-                    decoration: BoxDecoration(
-                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _focusNode,
-                        onChanged: _onSearchChanged,
-                        onSubmitted: _handleSearch,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SearchScreen()),
-                          );
-                        },
-                        readOnly: true,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Search bike model or plate number...',
-                          hintStyle: TextStyle(
-                            color: isDark ? Colors.white24 : Colors.black26,
-                            fontWeight: FontWeight.normal,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Expanded(
+                child: RepaintBoundary(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DATABASE',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.5,
+                                  color: isDark ? Colors.white38 : Colors.black38,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'SEARCH',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
-                          prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : Colors.black38, size: 28),
-                          suffixIcon: _isSearching
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12.0),
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00C853)),
+                          const SizedBox(height: 25),
+                          Container(
+                            height: 70, 
+                            decoration: BoxDecoration(
+                              color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: TextField(
+                                controller: _searchController,
+                                focusNode: _focusNode,
+                                onChanged: _onSearchChanged,
+                                onSubmitted: _handleSearch,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const SearchScreen()),
+                                  );
+                                },
+                                readOnly: true,
+                                textAlignVertical: TextAlignVertical.center,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Search bike model or plate number...',
+                                  hintStyle: TextStyle(
+                                    color: isDark ? Colors.white24 : Colors.black26,
+                                    fontWeight: FontWeight.normal,
                                   ),
-                                )
-                              : (_searchController.text.isNotEmpty 
-                                  ? IconButton(
-                                      icon: Icon(Icons.clear, color: isDark ? Colors.white : Colors.black),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        _onSearchChanged('');
-                                      },
-                                    )
-                                  : null),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero, // Zero padding with Center widget handles alignment
-                        ),
+                                  prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : Colors.black38, size: 28),
+                                  suffixIcon: _isSearching
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12.0),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00C853)),
+                                          ),
+                                        )
+                                      : (_searchController.text.isNotEmpty 
+                                          ? IconButton(
+                                              icon: Icon(Icons.clear, color: isDark ? Colors.white : Colors.black),
+                                              onPressed: () {
+                                                _searchController.clear();
+                                                _onSearchChanged('');
+                                              },
+                                            )
+                                          : null),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            reverseDuration: const Duration(milliseconds: 250),
+                            switchInCurve: Curves.easeOutQuart,
+                            switchOutCurve: Curves.easeInQuad,
+                            transitionBuilder: (Widget child, Animation<double> animation) {
+                              return SizeTransition(
+                                sizeFactor: animation,
+                                axisAlignment: -1.0,
+                                child: FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: ((_showManufacturers || _focusNode.hasFocus) && !_isSearching)
+                                ? _buildManufacturerDialog(isDark)
+                                : const SizedBox.shrink(key: ValueKey('dialog_hidden')),
+                          ),
+                          const SizedBox(height: 30),
+                          Text(
+                            'Quick Actions',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(child: _buildQuickAction(isDark, 'Scan Plate', FontAwesomeIcons.camera)),
+                              const SizedBox(width: 15),
+                              Expanded(child: _buildQuickAction(isDark, 'History', FontAwesomeIcons.clockRotateLeft)),
+                              const SizedBox(width: 15),
+                              Expanded(child: _buildQuickAction(isDark, 'Stats', FontAwesomeIcons.chartLine)),
+                            ],
+                          ),
+                          const SizedBox(height: 120),
+                        ],
                       ),
                     ),
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    reverseDuration: const Duration(milliseconds: 250),
-                    switchInCurve: Curves.easeOutQuart,
-                    switchOutCurve: Curves.easeInQuad,
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      return SizeTransition(
-                        sizeFactor: animation,
-                        axisAlignment: -1.0,
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: ((_showManufacturers || _focusNode.hasFocus) && !_isSearching)
-                        ? _buildManufacturerDialog(isDark)
-                        : const SizedBox.shrink(key: ValueKey('dialog_hidden')),
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    'Quick Actions',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      Expanded(child: _buildQuickAction(isDark, 'Scan Plate', FontAwesomeIcons.camera)),
-                      const SizedBox(width: 15),
-                      Expanded(child: _buildQuickAction(isDark, 'History', FontAwesomeIcons.clockRotateLeft)),
-                      const SizedBox(width: 15),
-                      Expanded(child: _buildQuickAction(isDark, 'Stats', FontAwesomeIcons.chartLine)),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    'Recent Searches',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildRecentSearch(isDark, 'Kawasaki Ninja ZX-10R', 'ABC 1234'),
-                  const SizedBox(height: 12),
-                  _buildRecentSearch(isDark, 'Yamaha R1M', 'XYZ 9876'),
-                  const SizedBox(height: 12),
-                  _buildRecentSearch(isDark, 'Ducati Panigale V4', 'BKR 4455'),
-                  const SizedBox(height: 120),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -269,7 +264,7 @@ class _CheckScreenState extends State<CheckScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white : Colors.black,
-          width: 4.0, // Match search bar outline
+          width: 4.0,
         ),
       ),
       child: ClipRRect(
@@ -421,6 +416,16 @@ class _CheckScreenState extends State<CheckScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => const ScanPlateScreen()),
               );
+            } else if (label == 'History') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SoundHistoryScreen()),
+              );
+            } else if (label == 'Stats') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StatsScreen()),
+              );
             }
           },
           borderRadius: BorderRadius.circular(24),
@@ -439,71 +444,6 @@ class _CheckScreenState extends State<CheckScreen> {
                     color: primaryColor,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentSearch(bool isDark, String title, String plate) {
-    final primaryColor = isDark ? Colors.white : Colors.black;
-    return Container(
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ResultScreen(plateNumber: plate),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: FaIcon(FontAwesomeIcons.motorcycle, color: primaryColor.withOpacity(0.3), size: 20),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: primaryColor,
-                        ),
-                      ),
-                      Text(
-                        plate,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                          color: isDark ? Colors.white24 : Colors.black26,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: primaryColor.withOpacity(0.2)),
               ],
             ),
           ),

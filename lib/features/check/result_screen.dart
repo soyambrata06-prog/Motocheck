@@ -32,7 +32,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Future<void> _fetchBikeDetails() async {
     setState(() => _isLoading = true);
-    // Add a minimum delay for the animation to look good
+
     await Future.delayed(const Duration(milliseconds: 1500));
     final data = await _vehicleService.getVehicleDetails(widget.plateNumber);
     if (mounted) {

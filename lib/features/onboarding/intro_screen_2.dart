@@ -9,19 +9,23 @@ class IntroScreen2 extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, RouteNames.authChoice),
-                  child: const Text('Skip', style: TextStyle(color: Colors.black)),
-                ),
-              ),
-              const SizedBox(height: 40),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.pushReplacementNamed(context, RouteNames.authChoice),
+                        child: const Text('Skip', style: TextStyle(color: Colors.black)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
               const Text(
                 'Check legality,\navoid fines, stay safe.',
                 style: TextStyle(
@@ -71,6 +75,9 @@ class IntroScreen2 extends StatelessWidget {
               const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+          ],
         ),
       ),
     );

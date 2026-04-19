@@ -5,8 +5,8 @@ import 'package:http/http.dart' as http;
 import '../models/bike_model.dart';
 
 class VehicleService {
-  // RapidAPI Configuration - Using a common Vahan API structure
-  final String _rapidApiKey = 'YOUR_RAPIDAPI_KEY'; // User should replace this
+
+  final String _rapidApiKey = '469df5d22emsh5d7331908638127p1c5678jsn0850228f4204'; // User should replace this
   final String _baseUrl = 'https://vahan-vehicle-registration-details-india.p.rapidapi.com';
 
   final List<String> _models = [
@@ -105,12 +105,10 @@ class VehicleService {
     },
   };
 
-  /// Fetches vehicle details from Vahan API (via RapidAPI).
-  /// Falls back to mock data if API key is not provided or request fails.
+
   Future<BikeModel?> getVehicleDetails(String plateNumber) async {
     final cleanPlate = plateNumber.toUpperCase().replaceAll(' ', '');
-    
-    // 1. Try Real API Integration if key is provided
+
     if (_rapidApiKey != 'YOUR_RAPIDAPI_KEY') {
       try {
         final response = await http.get(
@@ -133,7 +131,6 @@ class VehicleService {
       }
     }
 
-    // 2. MOCK FALLBACK
     return _getMockData(cleanPlate);
   }
 

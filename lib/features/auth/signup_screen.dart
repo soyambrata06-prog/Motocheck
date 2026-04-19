@@ -27,13 +27,16 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Text(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                 'Create\nAccount',
                 style: TextStyle(
                   fontSize: 40,
@@ -126,6 +129,9 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+          ],
         ),
       ),
     );

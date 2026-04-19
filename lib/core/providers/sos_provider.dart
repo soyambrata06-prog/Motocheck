@@ -23,7 +23,6 @@ class SosProvider with ChangeNotifier {
   bool _isSharingLocation = false;
   DateTime? _lastLocationShared;
 
-  // Crash detection state
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   static const double _gravity = 9.81;
   static const int _cooldownMs = 5000;
@@ -155,17 +154,9 @@ class SosProvider with ChangeNotifier {
       final now = DateTime.now();
       if (_lastDetectionTime == null || now.difference(_lastDetectionTime!).inMilliseconds > _cooldownMs) {
         _lastDetectionTime = now;
-        _onCrashDetected(gForce);
+        triggerSos();
       }
     }
-  }
-
-  void _onCrashDetected(double intensity) {
-    debugPrint("CRASH DETECTED! Intensity: $intensity G");
-    _setSiren(true);
-    _setStrobe(true);
-    if (!_isSharingLocation) toggleLocationSharing();
-    notifyListeners();
   }
 
   @override

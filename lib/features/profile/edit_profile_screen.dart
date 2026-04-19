@@ -141,8 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
               const SizedBox(height: 35),
-              
-              // Avatar section
+
               Center(
                 child: Stack(
                   clipBehavior: Clip.none,

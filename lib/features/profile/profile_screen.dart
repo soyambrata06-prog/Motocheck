@@ -110,271 +110,272 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
 
     return Scaffold(
       backgroundColor: themeProvider.isDarkMode ? Colors.black : const Color(0xFFF8F9FA),
-      body: RepaintBoundary(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ACCOUNT',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'PROFILE',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              
-              // Profile Card with Premium Monochrome Aesthetic
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userProvider.displayName,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : Colors.black,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Expanded(
+              child: RepaintBoundary(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ACCOUNT',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'PROFILE',
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+                              width: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          _buildPremiumInfoRow(Icons.mail_outline_rounded, userProvider.email, isDark),
-                          _buildPremiumInfoRow(Icons.phone_outlined, userProvider.phoneNumber, isDark),
-                          _buildPremiumInfoRow(Icons.cake_outlined, userProvider.dob, isDark),
-                          _buildPremiumInfoRow(Icons.location_on_outlined, userProvider.location, isDark),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00C853).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'VERIFIED RIDER',
-                              style: TextStyle(
-                                color: Color(0xFF00C853),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userProvider.displayName,
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w900,
+                                        color: isDark ? Colors.white : Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildPremiumInfoRow(Icons.mail_outline_rounded, userProvider.email, isDark),
+                                    _buildPremiumInfoRow(Icons.phone_outlined, userProvider.phoneNumber, isDark),
+                                    _buildPremiumInfoRow(Icons.cake_outlined, userProvider.dob, isDark),
+                                    _buildPremiumInfoRow(Icons.location_on_outlined, userProvider.location, isDark),
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF00C853).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'VERIFIED RIDER',
+                                        style: TextStyle(
+                                          color: Color(0xFF00C853),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 20),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF00C853).withOpacity(0.5),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 45,
+                                  backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                                  backgroundImage: NetworkImage(userProvider.profileImageUrl),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 35),
+                        const SavedBikes(),
+                        
+                        const SizedBox(height: 35),
+                        Text(
+                          'Settings',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildPremiumTile(Icons.person_outline_rounded, 'Edit Profile', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
+                              }),
+                              _buildPremiumTile(Icons.notifications_none_rounded, 'Notifications', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()));
+                              }),
+                              _buildPremiumTile(Icons.history_rounded, 'Sound Check History', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const SoundHistoryScreen()));
+                              }),
+                              _buildPremiumThemeTile(themeProvider, isDark),
+                              _buildPremiumTile(Icons.headset_mic_outlined, 'Help & Support', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()));
+                              }),
+                              _buildPremiumTile(Icons.verified_user_outlined, 'Privacy', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
+                              }),
+                              _buildPremiumTile(Icons.info_outline_rounded, 'About', isDark, () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen()));
+                              }),
+                              _buildPremiumTile(Icons.logout_rounded, 'Log Out', isDark, () => _onSignOut(context), isDestructive: true, isLast: true),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 35),
+                        if (_soundHistory.isNotEmpty) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Recent Sound Tests',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const SoundHistoryScreen()),
+                                  );
+                                },
+                                child: Text('View All', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 120,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: _soundHistory.take(5).length,
+                              itemBuilder: (context, index) {
+                                final test = _soundHistory[index];
+                                return Container(
+                                  width: 160,
+                                  margin: const EdgeInsets.only(right: 16),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: test.isPass ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Icon(
+                                            test.isPass ? Icons.check_circle_outline : Icons.error_outline,
+                                            size: 16,
+                                            color: test.isPass ? Colors.green : Colors.red,
+                                          ),
+                                          Text(
+                                            '${test.peakDb.toInt()} dB',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w900,
+                                              color: isDark ? Colors.white : Colors.black,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            test.bikeName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: isDark ? Colors.white70 : Colors.black87,
+                                            ),
+                                          ),
+                                          Text(
+                                            test.timestamp.toString().split(' ')[0],
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: isDark ? Colors.white38 : Colors.black38,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
-                      ),
+
+                        const SizedBox(height: 140), // Extra space for floating nav bar
+                      ],
                     ),
-                    const SizedBox(width: 20),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF00C853).withOpacity(0.5),
-                          width: 2,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 45,
-                        backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                        backgroundImage: NetworkImage(userProvider.profileImageUrl),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 35),
-              const SavedBikes(),
-              
-              const SizedBox(height: 35),
-              Text(
-                'Settings',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 15),
-              
-              // Settings Section
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
-                    width: 1.5,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    _buildPremiumTile(Icons.person_outline_rounded, 'Edit Profile', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const EditProfileScreen()));
-                    }),
-                    _buildPremiumTile(Icons.notifications_none_rounded, 'Notifications', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()));
-                    }),
-                    _buildPremiumTile(Icons.history_rounded, 'Sound Check History', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SoundHistoryScreen()));
-                    }),
-                    _buildPremiumThemeTile(themeProvider, isDark),
-                    _buildPremiumTile(Icons.headset_mic_outlined, 'Help & Support', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()));
-                    }),
-                    _buildPremiumTile(Icons.verified_user_outlined, 'Privacy', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyScreen()));
-                    }),
-                    _buildPremiumTile(Icons.info_outline_rounded, 'About', isDark, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutScreen()));
-                    }),
-                    _buildPremiumTile(Icons.logout_rounded, 'Log Out', isDark, () => _onSignOut(context), isDestructive: true, isLast: true),
-                  ],
-                ),
               ),
-                
-                const SizedBox(height: 140), // Extra space for floating nav bar
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSoundHistorySection(bool isDark) {
-    if (_soundHistory.isEmpty) return const SizedBox.shrink();
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Sound Tests',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SoundHistoryScreen()),
-                );
-              },
-              child: Text('View All', style: TextStyle(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: _soundHistory.take(5).length,
-            itemBuilder: (context, index) {
-              final test = _soundHistory[index];
-              return Container(
-                width: 160,
-                margin: const EdgeInsets.only(right: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: test.isPass ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(
-                          test.isPass ? Icons.check_circle_outline : Icons.error_outline,
-                          size: 16,
-                          color: test.isPass ? Colors.green : Colors.red,
-                        ),
-                        Text(
-                          '${test.peakDb.toInt()} dB',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          test.bikeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          test.timestamp.toString().split(' ')[0],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 

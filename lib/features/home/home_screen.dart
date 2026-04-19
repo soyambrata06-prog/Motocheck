@@ -1,6 +1,8 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'widgets/search_bar.dart';
+import 'widgets/live_map_tile.dart';
 import '../../core/providers/navigation_provider.dart';
 import '../sound/sound_measure_screen.dart';
 import '../../core/providers/user_provider.dart';
@@ -16,148 +18,160 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+      body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 60),
-            
-            // Custom Top App Bar (Secure/Database Style)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildTopAppBar(userProvider, isDark),
-            ),
-            
-            const SizedBox(height: 35),
-            
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1 & 2. Unified Smart Dashboard
-                  _buildSectionHeader('SMART DASHBOARD', isDark),
-                  _buildUnifiedDashboard(isDark, secondaryColor),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildHeroButton('View Full Details', isDark)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _buildHeroButton('Maintenance Logs', isDark)),
-                    ],
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // 3. Quick Actions
-                  _buildSectionHeader('QUICK ACTIONS', isDark),
-                  const SizedBox(height: 12),
-                  _buildQuickAction(
-                    context, 
-                    'Police Mode', 
-                    'Verify bike legality instantly', 
-                    Icons.policy_rounded, 
-                    const Color(0xFF2196F3), 
-                    isDark,
-                    onTap: () {
-                      // Navigate to Police Mode
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _buildQuickAction(
-                    context, 
-                    'SOS Emergency', 
-                    'Send alert + live location', 
-                    Icons.emergency_share_rounded, 
-                    const Color(0xFFFF5252), 
-                    isDark,
-                    onTap: () {
-                      Provider.of<NavigationProvider>(context, listen: false).setIndex(2);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  _buildQuickAction(
-                    context, 
-                    'Sound Check', 
-                    'Measure exhaust dB level', 
-                    Icons.graphic_eq_rounded, 
-                    const Color(0xFFFF9100), 
-                    isDark,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SoundMeasureScreen()),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // 4. Ride Stats
-                  _buildSectionHeader('RIDE INSIGHTS', isDark),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 140,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      clipBehavior: Clip.none,
-                      children: [
-                        _buildStatCard('Distance', '124.8 km', Icons.route_rounded, isDark),
-                        _buildStatCard('Avg Speed', '42 km/h', Icons.speed_rounded, isDark),
-                        _buildStatCard('Ride Time', '3h 20m', Icons.timer_rounded, isDark),
-                        _buildStatCard('Top Speed', '87 km/h', Icons.bolt_rounded, isDark),
-                      ],
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: _buildTopAppBar(userProvider, isDark),
                     ),
-                  ),
+                    const SizedBox(height: 35),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionHeader('SMART DASHBOARD', isDark),
+                          _buildUnifiedDashboard(isDark, secondaryColor),
 
-                  const SizedBox(height: 25),
+                          const SizedBox(height: 25),
+                          _buildSectionHeader('NAVIGATION', isDark),
+                          const SizedBox(height: 12),
+                          const LiveMapTile(),
 
-                  // 5. Alerts & Warnings
-                  _buildSectionHeader('ALERTS & WARNINGS', isDark),
-                  const SizedBox(height: 12),
-                  _buildAlertTile('Service due in 8 days', Colors.orange, isDark),
-                  const SizedBox(height: 8),
-                  _buildAlertTile('Insurance expires on 28 April', Colors.orange, isDark),
-                  const SizedBox(height: 8),
-                  _buildAlertTile('Exhaust sound slightly above normal', Colors.red, isDark),
+                          const SizedBox(height: 15),
+                          const HomeSearchBar(),
+                          const SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(child: _buildHeroButton('View Full Details', isDark)),
+                              const SizedBox(width: 10),
+                              Expanded(child: _buildHeroButton('Maintenance Logs', isDark)),
+                            ],
+                          ),
 
-                  const SizedBox(height: 25),
+                          const SizedBox(height: 25),
 
-                  // 6. Smart Insights
-                  _buildSectionHeader('SMART INSIGHTS', isDark),
-                  const SizedBox(height: 12),
-                  _buildInsightCard('Legal dB Range: 90–95 dB', Icons.gavel_rounded, isDark),
-                  const SizedBox(height: 8),
-                  _buildInsightCard('Avoid high RPM before engine warms up', Icons.tips_and_updates_rounded, isDark),
-                  const SizedBox(height: 8),
-                  _buildInsightCard('Maintain 40–60 km/h for best mileage', Icons.eco_rounded, isDark),
+                          _buildSectionHeader('QUICK ACTIONS', isDark),
+                          const SizedBox(height: 12),
+                          _buildQuickAction(
+                            context, 
+                            'Police Mode', 
+                            'Verify bike legality instantly', 
+                            Icons.policy_rounded, 
+                            const Color(0xFF2196F3), 
+                            isDark,
+                            onTap: () {
 
-                  const SizedBox(height: 25),
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          _buildQuickAction(
+                            context, 
+                            'SOS Emergency', 
+                            'Send alert + live location', 
+                            Icons.emergency_share_rounded, 
+                            const Color(0xFFFF5252), 
+                            isDark,
+                            onTap: () {
+                              Provider.of<NavigationProvider>(context, listen: false).setIndex(2);
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          _buildQuickAction(
+                            context, 
+                            'Sound Check', 
+                            'Measure exhaust dB level', 
+                            Icons.graphic_eq_rounded, 
+                            const Color(0xFFFF9100), 
+                            isDark,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SoundMeasureScreen()),
+                              );
+                            },
+                          ),
 
-                  // 7. Quick Maintenance
-                  _buildSectionHeader('MAINTENANCE', isDark),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildMaintenanceButton('Book Service', Icons.build_rounded, isDark)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _buildMaintenanceButton('Oil Guide', Icons.oil_barrel_rounded, isDark)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _buildMaintenanceButton('Documents', Icons.description_rounded, isDark)),
-                    ],
-                  ),
+                          const SizedBox(height: 25),
 
-                  const SizedBox(height: 25),
+                          _buildSectionHeader('RIDE INSIGHTS', isDark),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 140,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              clipBehavior: Clip.none,
+                              children: [
+                                _buildStatCard('Distance', '124.8 km', Icons.route_rounded, isDark),
+                                _buildStatCard('Avg Speed', '42 km/h', Icons.speed_rounded, isDark),
+                                _buildStatCard('Ride Time', '3h 20m', Icons.timer_rounded, isDark),
+                                _buildStatCard('Top Speed', '87 km/h', Icons.bolt_rounded, isDark),
+                              ],
+                            ),
+                          ),
 
-                  // 8. Last Ride Snapshot
-                  _buildSectionHeader('LAST RIDE SNAPSHOT', isDark),
-                  const SizedBox(height: 12),
-                  _buildLastRideCard(isDark),
+                          const SizedBox(height: 25),
 
-                  const SizedBox(height: 120),
-                ],
+                          _buildSectionHeader('ALERTS & WARNINGS', isDark),
+                          const SizedBox(height: 12),
+                          _buildAlertTile('Service due in 8 days', Colors.orange, isDark),
+                          const SizedBox(height: 8),
+                          _buildAlertTile('Insurance expires on 28 April', Colors.orange, isDark),
+                          const SizedBox(height: 8),
+                          _buildAlertTile('Exhaust sound slightly above normal', Colors.red, isDark),
+
+                          const SizedBox(height: 25),
+
+                          _buildSectionHeader('SMART INSIGHTS', isDark),
+                          const SizedBox(height: 12),
+                          _buildInsightCard('Legal dB Range: 90–95 dB', Icons.gavel_rounded, isDark),
+                          const SizedBox(height: 8),
+                          _buildInsightCard('Avoid high RPM before engine warms up', Icons.tips_and_updates_rounded, isDark),
+                          const SizedBox(height: 8),
+                          _buildInsightCard('Maintain 40–60 km/h for best mileage', Icons.eco_rounded, isDark),
+
+                          const SizedBox(height: 25),
+
+                          _buildSectionHeader('SMART MAINTENANCE', isDark),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(child: _buildMaintenanceButton('Book Service', Icons.build_rounded, isDark)),
+                              const SizedBox(width: 10),
+                              Expanded(child: _buildMaintenanceButton('Oil Guide', Icons.oil_barrel_rounded, isDark)),
+                              const SizedBox(width: 10),
+                              Expanded(child: _buildMaintenanceButton('Documents', Icons.description_rounded, isDark)),
+                            ],
+                          ),
+
+                          const SizedBox(height: 25),
+
+                          _buildSectionHeader('NAVIGATION', isDark),
+                          const SizedBox(height: 12),
+                          const LiveMapTile(),
+
+                          const SizedBox(height: 25),
+
+                          _buildSectionHeader('LAST RIDE SNAPSHOT', isDark),
+                          const SizedBox(height: 12),
+                          _buildLastRideCard(isDark),
+
+                          const SizedBox(height: 120),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

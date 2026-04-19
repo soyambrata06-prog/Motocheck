@@ -14,7 +14,7 @@ class HelpSupportScreen extends StatelessWidget {
       backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
       body: Stack(
         children: [
-          // Background Gradient for depth (True Black style)
+
           if (isDark)
             Positioned(
               top: -100,

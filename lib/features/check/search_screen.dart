@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../data/models/bike_model.dart';
 import '../../core/providers/bike_provider.dart';
 import 'bike_details_screen.dart';
+import 'result_screen.dart';
+import 'scan_plate_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -33,6 +35,13 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  bool _isPlateFormat(String query) {
+    final cleanQuery = query.toUpperCase().replaceAll(' ', '');
+    // Regex for Indian Plate (Standard & BH)
+    final plateRegex = RegExp(r'^([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4})|([0-9]{2}BH[0-9]{4}[A-Z]{1,2})$');
+    return plateRegex.hasMatch(cleanQuery);
+  }
+
   void _onSearchChanged(String query) {
     final bikeProvider = Provider.of<BikeProvider>(context, listen: false);
     setState(() {
@@ -51,6 +60,24 @@ class _SearchScreenState extends State<SearchScreen> {
             .toList();
       }
     });
+  }
+
+  void _handleSubmit(String query) {
+    if (query.isEmpty) return;
+    
+    if (_isPlateFormat(query)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(plateNumber: query.toUpperCase().replaceAll(' ', '')),
+        ),
+      );
+    } else {
+      if (_filteredBikes.isNotEmpty) {
+        final bike = _filteredBikes.first;
+        _navigateToDetails(bike, bike.manufacturerId);
+      }
+    }
   }
 
   @override
@@ -72,17 +99,18 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 120),
-          Padding(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'EXPLORE',
+                  'SMART SEARCH',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
@@ -92,7 +120,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'DATABASE',
+                  'VERIFICATION',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -106,12 +134,15 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 25),
           _buildSearchBar(isDark),
           Expanded(
-            child: _isSearching ? _buildSearchResults(isDark) : _buildDirectory(isDark),
+            child: _isSearching 
+                ? _buildSearchResults(isDark) 
+                : _buildDirectory(isDark),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSearchBar(bool isDark) {
     final primaryColor = isDark ? Colors.white : Colors.black;
@@ -132,6 +163,7 @@ class _SearchScreenState extends State<SearchScreen> {
             controller: _searchController,
             focusNode: _focusNode,
             onChanged: _onSearchChanged,
+            onSubmitted: _handleSubmit,
             textAlignVertical: TextAlignVertical.center,
             style: TextStyle(
               color: primaryColor,
@@ -139,21 +171,35 @@ class _SearchScreenState extends State<SearchScreen> {
               fontWeight: FontWeight.bold,
             ),
             decoration: InputDecoration(
-              hintText: 'Search bike model or manufacturer...',
+              hintText: 'Plate No, Model or Brand...',
               hintStyle: TextStyle(
                 color: primaryColor.withOpacity(0.24),
                 fontWeight: FontWeight.normal,
               ),
               prefixIcon: Icon(Icons.search, color: primaryColor.withOpacity(0.38), size: 28),
-              suffixIcon: _searchController.text.isNotEmpty 
-                  ? IconButton(
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_searchController.text.isNotEmpty)
+                    IconButton(
                       icon: Icon(Icons.clear, color: primaryColor),
                       onPressed: () {
                         _searchController.clear();
                         _onSearchChanged('');
                       },
-                    )
-                  : null,
+                    ),
+                  IconButton(
+                    icon: Icon(FontAwesomeIcons.camera, color: primaryColor.withOpacity(0.5), size: 20),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ScanPlateScreen()),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
@@ -164,8 +210,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildDirectory(bool isDark) {
-    final bikeProvider = Provider.of<BikeProvider>(context);
-    
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       physics: const BouncingScrollPhysics(),
@@ -180,9 +224,18 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        ...bikeProvider.manufacturers.map((manufacturer) => _buildManufacturerAccordion(isDark, manufacturer)),
+        _buildDirectoryContent(isDark),
         const SizedBox(height: 100),
       ],
+    );
+  }
+
+  Widget _buildDirectoryContent(bool isDark) {
+    final bikeProvider = Provider.of<BikeProvider>(context);
+    return Column(
+      children: bikeProvider.manufacturers
+          .map((manufacturer) => _buildManufacturerAccordion(isDark, manufacturer))
+          .toList(),
     );
   }
 
@@ -316,7 +369,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               trailing: Icon(Icons.arrow_forward_ios_rounded, color: primaryColor.withOpacity(0.2), size: 14),
-              onTap: () => _navigateToDetails(bike, bike.manufacturerId),
+              onTap: () {
+                _navigateToDetails(bike, bike.manufacturerId);
+              },
             ),
           ),
         );
@@ -331,6 +386,12 @@ class _SearchScreenState extends State<SearchScreen> {
       make: companyName,
       model: bikeData.name,
       year: 2023,
+      engineSize: '998cc',
+      power: '203 HP',
+      weight: '207 kg',
+      topSpeed: '299 km/h',
+      dbLimit: 95.0,
+      isLegal: true,
     );
     
     Navigator.push(

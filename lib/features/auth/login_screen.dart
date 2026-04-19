@@ -27,13 +27,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Text(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                 'Welcome back',
                 style: TextStyle(
                   fontSize: 40,
@@ -125,6 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+          ],
         ),
       ),
     );

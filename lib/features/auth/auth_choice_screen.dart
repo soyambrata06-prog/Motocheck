@@ -19,7 +19,7 @@ class AuthChoiceScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
-              // Logo Section
+
               Center(
                 child: Text(
                   'motocheck',
@@ -32,8 +32,7 @@ class AuthChoiceScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(flex: 2),
-              
-              // Action Buttons
+
               ElevatedButton(
                 onPressed: () => Navigator.pushNamed(context, RouteNames.login),
                 style: ElevatedButton.styleFrom(
@@ -90,8 +89,7 @@ class AuthChoiceScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 32),
-              
-              // Social Login
+
               Row(
                 children: [
                   Expanded(
