@@ -30,3 +30,4 @@ class AppTypography {
     color: AppColors.textSecondary,
   );
 }
+

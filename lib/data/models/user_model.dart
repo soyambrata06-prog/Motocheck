@@ -21,3 +21,4 @@ class UserModel {
     required this.role,
   });
 }
+

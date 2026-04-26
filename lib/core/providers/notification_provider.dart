@@ -39,3 +39,4 @@ class NotificationProvider extends ChangeNotifier {
     await prefs.setBool('$_keyPrefix$key', value);
   }
 }
+

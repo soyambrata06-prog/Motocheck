@@ -35,7 +35,7 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
   NoiseMeter? _noiseMeter;
   StreamSubscription<NoiseReading>? _noiseSubscription;
 
-  int _currentStep = 0; // 0: Idle, 1: Mid, 2: Peak
+  int _currentStep = 0;
   final Map<int, double> _stepResults = {};
 
   Bike? _selectedBike;
@@ -1049,9 +1049,9 @@ class _SoundMeasureScreenState extends State<SoundMeasureScreen> with TickerProv
     ];
 
     final stepColors = [
-      const Color(0xFF4CAF50), // Green for Idle
-      const Color(0xFFFFC107), // Amber for Mid
-      const Color(0xFFFF5252), // Red for Peak
+      const Color(0xFF4CAF50),
+      const Color(0xFFFFC107),
+      const Color(0xFFFF5252),
     ];
 
     final currentStageColor = stepColors[_currentStep];
@@ -1568,11 +1568,11 @@ class MeterPainter extends CustomPainter {
 
     final gradientColors = [
       Colors.green,
-      Colors.green,   // Start buffer
+      Colors.green,
       Colors.yellow,
       Colors.orange,
       Colors.red,
-      Colors.red,     // End buffer
+      Colors.red,
     ];
 
 
@@ -1610,7 +1610,7 @@ class MeterPainter extends CustomPainter {
     canvas.drawArc(
       rect, 
       startAngle, 
-      valueSweep.clamp(0.001, totalSweep), // Use a micro-value to trigger StrokeCap.round
+      valueSweep.clamp(0.001, totalSweep),
       false, 
       paintValue
     );
@@ -1658,3 +1658,4 @@ class MeterPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant MeterPainter oldDelegate) => true;
 }
+

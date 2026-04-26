@@ -6,3 +6,4 @@ class UserRepository {
     return null;
   }
 }
+

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../routes/route_names.dart';
+import '../../check/result_screen.dart';
 
 class HomeSearchBar extends StatefulWidget {
   const HomeSearchBar({super.key});
@@ -14,10 +14,11 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
   void _onSearch() {
     final plate = _controller.text.trim();
     if (plate.isNotEmpty) {
-      Navigator.pushNamed(
+      Navigator.push(
         context,
-        RouteNames.result,
-        arguments: plate,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(plateNumber: plate),
+        ),
       );
       _controller.clear();
     }
@@ -65,3 +66,4 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     );
   }
 }
+

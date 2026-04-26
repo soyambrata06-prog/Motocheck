@@ -160,3 +160,4 @@ class BikeProvider extends ChangeNotifier {
     debugPrint('Database seeding completed.');
   }
 }
+

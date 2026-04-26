@@ -280,7 +280,7 @@ class _OnboardingPage extends StatelessWidget {
               ),
             )
           else
-            const SizedBox(height: 320), // Match bike2 height
+            const SizedBox(height: 320),
 
           const Spacer(),
           
@@ -355,3 +355,4 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
+

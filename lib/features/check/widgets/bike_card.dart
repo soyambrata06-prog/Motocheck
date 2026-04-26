@@ -158,3 +158,4 @@ class _BikeCardState extends State<BikeCard> with SingleTickerProviderStateMixin
     );
   }
 }
+

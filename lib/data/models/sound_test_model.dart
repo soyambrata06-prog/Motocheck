@@ -7,7 +7,7 @@ class SoundTestModel {
   final double limitDb;
   final bool isPass;
   final DateTime timestamp;
-  final String mode; // 'normal' or 'rev'
+  final String mode;
 
   SoundTestModel({
     required this.id,
@@ -49,3 +49,4 @@ class SoundTestModel {
     );
   }
 }
+

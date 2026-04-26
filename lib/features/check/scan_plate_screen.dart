@@ -261,3 +261,4 @@ class _ScanPlateScreenState extends State<ScanPlateScreen> with SingleTickerProv
     );
   }
 }
+

@@ -81,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
+              Navigator.pop(context);
               await authService.signOut();
               if (context.mounted) {
                 Navigator.pushAndRemoveUntil(
@@ -366,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                           ),
                         ],
 
-                        const SizedBox(height: 140), // Extra space for floating nav bar
+                        const SizedBox(height: 140),
                       ],
                     ),
                   ),
@@ -534,3 +534,4 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   }
 
 }
+

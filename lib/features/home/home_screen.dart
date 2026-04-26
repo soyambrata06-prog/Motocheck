@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'widgets/search_bar.dart';
 import 'widgets/live_map_tile.dart';
+import 'book_service_screen.dart';
+import 'oil_guide_screen.dart';
+import 'documents_screen.dart';
 import '../../core/providers/navigation_provider.dart';
 import '../sound/sound_measure_screen.dart';
 import '../../core/providers/user_provider.dart';
@@ -41,25 +44,12 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           _buildSectionHeader('SMART DASHBOARD', isDark),
                           _buildUnifiedDashboard(isDark, secondaryColor),
-
-                          const SizedBox(height: 25),
+                          const SizedBox(height: 32),
                           _buildSectionHeader('NAVIGATION', isDark),
                           const SizedBox(height: 12),
                           const LiveMapTile(),
 
-                          const SizedBox(height: 15),
-                          const HomeSearchBar(),
-                          const SizedBox(height: 15),
-                          Row(
-                            children: [
-                              Expanded(child: _buildHeroButton('View Full Details', isDark)),
-                              const SizedBox(width: 10),
-                              Expanded(child: _buildHeroButton('Maintenance Logs', isDark)),
-                            ],
-                          ),
-
-                          const SizedBox(height: 25),
-
+                          const SizedBox(height: 32),
                           _buildSectionHeader('QUICK ACTIONS', isDark),
                           const SizedBox(height: 12),
                           _buildQuickAction(
@@ -69,9 +59,7 @@ class HomeScreen extends StatelessWidget {
                             Icons.policy_rounded, 
                             const Color(0xFF2196F3), 
                             isDark,
-                            onTap: () {
-
-                            },
+                            onTap: () {},
                           ),
                           const SizedBox(height: 10),
                           _buildQuickAction(
@@ -101,8 +89,7 @@ class HomeScreen extends StatelessWidget {
                             },
                           ),
 
-                          const SizedBox(height: 25),
-
+                          const SizedBox(height: 32),
                           _buildSectionHeader('RIDE INSIGHTS', isDark),
                           const SizedBox(height: 12),
                           SizedBox(
@@ -120,8 +107,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 25),
-
+                          const SizedBox(height: 32),
                           _buildSectionHeader('ALERTS & WARNINGS', isDark),
                           const SizedBox(height: 12),
                           _buildAlertTile('Service due in 8 days', Colors.orange, isDark),
@@ -130,8 +116,7 @@ class HomeScreen extends StatelessWidget {
                           const SizedBox(height: 8),
                           _buildAlertTile('Exhaust sound slightly above normal', Colors.red, isDark),
 
-                          const SizedBox(height: 25),
-
+                          const SizedBox(height: 32),
                           _buildSectionHeader('SMART INSIGHTS', isDark),
                           const SizedBox(height: 12),
                           _buildInsightCard('Legal dB Range: 90–95 dB', Icons.gavel_rounded, isDark),
@@ -139,28 +124,6 @@ class HomeScreen extends StatelessWidget {
                           _buildInsightCard('Avoid high RPM before engine warms up', Icons.tips_and_updates_rounded, isDark),
                           const SizedBox(height: 8),
                           _buildInsightCard('Maintain 40–60 km/h for best mileage', Icons.eco_rounded, isDark),
-
-                          const SizedBox(height: 25),
-
-                          _buildSectionHeader('SMART MAINTENANCE', isDark),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(child: _buildMaintenanceButton('Book Service', Icons.build_rounded, isDark)),
-                              const SizedBox(width: 10),
-                              Expanded(child: _buildMaintenanceButton('Oil Guide', Icons.oil_barrel_rounded, isDark)),
-                              const SizedBox(width: 10),
-                              Expanded(child: _buildMaintenanceButton('Documents', Icons.description_rounded, isDark)),
-                            ],
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          _buildSectionHeader('NAVIGATION', isDark),
-                          const SizedBox(height: 12),
-                          const LiveMapTile(),
-
-                          const SizedBox(height: 25),
 
                           _buildSectionHeader('LAST RIDE SNAPSHOT', isDark),
                           const SizedBox(height: 12),
@@ -355,7 +318,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               color: (isDark ? Colors.black : Colors.white).withOpacity(0.4),
@@ -370,7 +333,6 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -402,21 +364,30 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroButton(String label, bool isDark) {
+  Widget _buildHeroButton(String label, bool isDark, {VoidCallback? onTap}) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.08)),
       ),
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : Colors.black,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -604,21 +575,30 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMaintenanceButton(String label, IconData icon, bool isDark) {
+  Widget _buildMaintenanceButton(String label, IconData icon, bool isDark, {VoidCallback? onTap}) {
     final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05)),
       ),
-      child: Column(
-        children: [
-          Icon(icon, size: 20, color: isDark ? Colors.white : Colors.black),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isDark ? Colors.white70 : Colors.black87)),
-        ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Icon(icon, size: 20, color: isDark ? Colors.white : Colors.black),
+                const SizedBox(height: 8),
+                Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isDark ? Colors.white70 : Colors.black87)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -738,3 +718,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+

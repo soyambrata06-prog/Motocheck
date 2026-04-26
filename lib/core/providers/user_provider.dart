@@ -9,7 +9,7 @@ class UserProvider extends ChangeNotifier {
   String _email = 'soyamb@example.com';
   String _location = 'Bhubaneswar, Odisha';
   String _dob = '15 June 1998';
-  String _profileImageUrl = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop';
+  String _profileImageUrl = 'https:
   List<BikeModel> _savedBikes = [];
 
   String get displayName => _displayName;
@@ -101,3 +101,4 @@ class UserProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

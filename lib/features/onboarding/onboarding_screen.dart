@@ -24,3 +24,4 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 }
+

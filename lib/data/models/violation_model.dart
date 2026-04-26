@@ -13,3 +13,4 @@ class ViolationModel {
     required this.date,
   });
 }
+

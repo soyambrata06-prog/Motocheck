@@ -47,3 +47,4 @@ final List<CompanySearchModel> bikeManufacturers = [
     BikeSearchModel('Aerox 155', isScooter: true),
   ]),
 ];
+

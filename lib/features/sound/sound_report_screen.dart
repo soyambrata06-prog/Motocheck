@@ -326,3 +326,4 @@ class SoundReportScreen extends StatelessWidget {
     Share.share(report);
   }
 }
+

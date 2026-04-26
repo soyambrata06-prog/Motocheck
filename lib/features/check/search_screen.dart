@@ -37,7 +37,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   bool _isPlateFormat(String query) {
     final cleanQuery = query.toUpperCase().replaceAll(' ', '');
-    // Regex for Indian Plate (Standard & BH)
+
     final plateRegex = RegExp(r'^([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4})|([0-9]{2}BH[0-9]{4}[A-Z]{1,2})$');
     return plateRegex.hasMatch(cleanQuery);
   }
@@ -86,63 +86,64 @@ class _SearchScreenState extends State<SearchScreen> {
     final primaryColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.white,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-      ),
+      backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
             Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'SMART SEARCH',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    color: isDark ? Colors.white.withOpacity(0.38) : Colors.black.withOpacity(0.38),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor, size: 20),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'VERIFICATION',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                    color: primaryColor,
+                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SMART SEARCH',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                      Text(
+                        _isSearching ? 'SEARCHING' : 'VERIFICATION',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                          color: primaryColor,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 25),
-          _buildSearchBar(isDark),
-          Expanded(
-            child: _isSearching 
-                ? _buildSearchResults(isDark) 
-                : _buildDirectory(isDark),
-          ),
-        ],
+            _buildSearchBar(isDark),
+            Expanded(
+              child: _isSearching 
+                  ? _buildSearchResults(isDark) 
+                  : _buildDirectory(isDark),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSearchBar(bool isDark) {
     final primaryColor = isDark ? Colors.white : Colors.black;
@@ -410,3 +411,4 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 }
+

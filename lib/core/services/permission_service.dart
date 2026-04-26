@@ -9,3 +9,4 @@ class PermissionService {
     return true;
   }
 }
+

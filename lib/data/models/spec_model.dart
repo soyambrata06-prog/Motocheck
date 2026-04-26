@@ -9,3 +9,4 @@ class SpecModel {
     this.isLegal = true,
   });
 }
+

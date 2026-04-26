@@ -198,3 +198,4 @@ class _DecibelIndicatorState extends State<DecibelIndicator> with SingleTickerPr
     );
   }
 }
+

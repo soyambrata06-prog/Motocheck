@@ -5,9 +5,8 @@ import 'package:http/http.dart' as http;
 import '../models/bike_model.dart';
 
 class VehicleService {
-
-  final String _rapidApiKey = '469df5d22emsh5d7331908638127p1c5678jsn0850228f4204'; // User should replace this
-  final String _baseUrl = 'https://vahan-vehicle-registration-details-india.p.rapidapi.com';
+  final String _rapidApiKey = '469df5d22emsh5d7331908638127p1c5678jsn0850228f4204';
+  final String _baseUrl = 'https:
 
   final List<String> _models = [
     'Duke 390', 'Duke 250', 'Duke 200', 'RC 390', 'RC 200', 'Adventure 390',
@@ -105,9 +104,31 @@ class VehicleService {
     },
   };
 
-
   Future<BikeModel?> getVehicleDetails(String plateNumber) async {
     final cleanPlate = plateNumber.toUpperCase().replaceAll(' ', '');
+
+    if (cleanPlate == 'MH12AB1234') {
+      return BikeModel(
+        id: 'DUMMY-1234',
+        plateNumber: 'MH 12 AB 1234',
+        model: 'Hunter 350',
+        make: 'Royal Enfield',
+        year: 2023,
+        engineSize: '349.3 cc',
+        power: '20.2 PS',
+        weight: '181 kg',
+        topSpeed: '114 km/h',
+        dbLimit: 82.0,
+        isLegal: true,
+        ownerName: 'SOYAMBRATA PRADHAN',
+        regDate: '15-Mar-2023',
+        fuelType: 'PETROL',
+        vehicleClass: 'MOTOR CYCLE',
+        insuranceStatus: 'Active',
+        pucStatus: 'Valid',
+        fitnessStatus: 'Active',
+      );
+    }
 
     if (_rapidApiKey != 'YOUR_RAPIDAPI_KEY') {
       try {
@@ -150,6 +171,13 @@ class VehicleService {
       topSpeed: '-',
       dbLimit: _estimateDbLimit(modelName),
       isLegal: true,
+      ownerName: apiData['owner_name'] ?? 'N/A',
+      regDate: apiData['registration_date'] ?? 'N/A',
+      fuelType: apiData['fuel_type'] ?? 'N/A',
+      vehicleClass: apiData['vehicle_class'] ?? 'N/A',
+      insuranceStatus: 'Active',
+      pucStatus: 'Valid',
+      fitnessStatus: 'Active',
     );
   }
 
@@ -178,6 +206,13 @@ class VehicleService {
       topSpeed: specs['topSpeed'],
       dbLimit: specs['dbLimit'],
       isLegal: random.nextDouble() > 0.1,
+      ownerName: 'JOHN DOE',
+      regDate: '10-Jan-2022',
+      fuelType: 'PETROL',
+      vehicleClass: 'MOTOR CYCLE',
+      insuranceStatus: 'Active',
+      pucStatus: 'Valid',
+      fitnessStatus: 'Active',
     );
   }
 
@@ -198,3 +233,4 @@ class VehicleService {
     return regExp.hasMatch(plateNumber.toUpperCase().replaceAll(' ', ''));
   }
 }
+

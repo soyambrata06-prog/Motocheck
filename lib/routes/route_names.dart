@@ -10,3 +10,4 @@ class RouteNames {
   static const String intro1 = '/';
   static const String intro2 = '/intro2';
 }
+

@@ -70,7 +70,7 @@ class NotificationSettingsScreen extends StatelessWidget {
               _buildSection(
                 title: 'Safety Alerts',
                 icon: Icons.security_rounded,
-                iconColor: const Color(0xFF00C853), // Using Safety Green consistently
+                iconColor: const Color(0xFF00C853),
                 info: 'Critical alerts for your safety and emergencies.',
                 isDark: isDark,
                 children: [
@@ -301,3 +301,4 @@ class NotificationSettingsScreen extends StatelessWidget {
     );
   }
 }
+

@@ -428,3 +428,4 @@ class AnimationAppearance extends StatelessWidget {
     );
   }
 }
+

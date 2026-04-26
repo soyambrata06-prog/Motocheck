@@ -164,3 +164,4 @@ class BikeDetailsScreen extends StatelessWidget {
     );
   }
 }
+

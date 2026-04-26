@@ -10,3 +10,4 @@ class NavigationProvider with ChangeNotifier {
     notifyListeners();
   }
 }
+

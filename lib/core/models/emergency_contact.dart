@@ -25,3 +25,4 @@ class EmergencyContact {
         relationship: json['relationship'],
       );
 }
+

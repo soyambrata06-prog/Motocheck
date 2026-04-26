@@ -55,7 +55,7 @@ class HelpSupportScreen extends StatelessWidget {
                           'Call Support',
                           Icons.phone_in_talk_rounded,
                           '+1 (800) 123-4567',
-                          color: const Color(0xFF448AFF), // Blue
+                          color: const Color(0xFF448AFF),
                         ),
                         const SizedBox(height: 12),
                         _buildSupportAction(
@@ -63,7 +63,7 @@ class HelpSupportScreen extends StatelessWidget {
                           'Email Support',
                           Icons.alternate_email_rounded,
                           'support@motocheck.app',
-                          color: const Color(0xFFFF5252), // Red
+                          color: const Color(0xFFFF5252),
                         ),
                         const SizedBox(height: 12),
                         _buildSupportAction(
@@ -71,7 +71,7 @@ class HelpSupportScreen extends StatelessWidget {
                           'Web Support',
                           Icons.language_rounded,
                           'www.motocheck.app',
-                          color: const Color(0xFF00C853), // Green
+                          color: const Color(0xFF00C853),
                         ),
                         
                         const SizedBox(height: 30),
@@ -268,3 +268,4 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 }
+

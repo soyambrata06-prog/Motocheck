@@ -49,3 +49,4 @@ class AuthInputField extends StatelessWidget {
     );
   }
 }
+

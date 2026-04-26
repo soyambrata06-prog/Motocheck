@@ -282,3 +282,4 @@ class SosProvider with ChangeNotifier {
     await prefs.setStringList('emergency_contacts', contactsJson);
   }
 }
+

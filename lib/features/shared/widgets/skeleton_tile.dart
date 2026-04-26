@@ -75,3 +75,4 @@ class _SkeletonTileState extends State<SkeletonTile> with SingleTickerProviderSt
     );
   }
 }
+

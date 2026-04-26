@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../core/providers/bike_provider.dart';
 import '../sound/sound_history_screen.dart';
 import '../stats/stats_screen.dart';
 import 'result_screen.dart';
 import 'scan_plate_screen.dart';
 import 'search_screen.dart';
+import '../home/book_service_screen.dart';
+import '../home/oil_guide_screen.dart';
+import '../home/documents_screen.dart';
 
 class CheckScreen extends StatefulWidget {
   const CheckScreen({super.key});
@@ -18,46 +20,12 @@ class CheckScreen extends StatefulWidget {
 class _CheckScreenState extends State<CheckScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  final bool _isSearching = false;
-  bool _showManufacturers = false;
-  List<Bike> _filteredBikes = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      setState(() {
-        _showManufacturers = _focusNode.hasFocus;
-      });
-    });
-  }
 
   @override
   void dispose() {
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  void _onSearchChanged(String query) {
-    final bikeProvider = Provider.of<BikeProvider>(context, listen: false);
-    setState(() {
-      if (query.isEmpty) {
-        _filteredBikes = [];
-      } else {
-        _filteredBikes = bikeProvider.manufacturers
-            .expand((m) => m.bikes.map((b) => {'bike': b, 'manufacturer': m.name}))
-            .where((item) {
-              final bike = item['bike'] as Bike;
-              final manufacturer = item['manufacturer'] as String;
-              final q = query.toLowerCase();
-              return bike.name.toLowerCase().contains(q) || 
-                     manufacturer.toLowerCase().contains(q);
-            })
-            .map((item) => item['bike'] as Bike)
-            .toList();
-      }
-    });
   }
 
   void _handleSearch(String value) {
@@ -74,16 +42,12 @@ class _CheckScreenState extends State<CheckScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? Colors.white : Colors.black;
 
     return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        setState(() {
-          _showManufacturers = false;
-        });
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: isDark ? Colors.black : Colors.white,
+        backgroundColor: isDark ? Colors.black : const Color(0xFFF8F9FA),
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +70,7 @@ class _CheckScreenState extends State<CheckScreen> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.5,
+                                  letterSpacing: 2,
                                   color: isDark ? Colors.white38 : Colors.black38,
                                 ),
                               ),
@@ -117,27 +81,34 @@ class _CheckScreenState extends State<CheckScreen> {
                                   fontSize: 32,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -0.5,
-                                  color: isDark ? Colors.white : Colors.black,
+                                  color: primaryColor,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 25),
+                          const SizedBox(height: 30),
                           Container(
-                            height: 70, 
+                            height: 70,
                             decoration: BoxDecoration(
-                              color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                              color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                                color: primaryColor.withOpacity(0.05),
                                 width: 1.5,
                               ),
+                              boxShadow: [
+                                if (!isDark)
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.03),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                              ],
                             ),
                             child: Center(
                               child: TextField(
                                 controller: _searchController,
                                 focusNode: _focusNode,
-                                onChanged: _onSearchChanged,
                                 onSubmitted: _handleSearch,
                                 onTap: () {
                                   Navigator.push(
@@ -148,79 +119,72 @@ class _CheckScreenState extends State<CheckScreen> {
                                 readOnly: true,
                                 textAlignVertical: TextAlignVertical.center,
                                 style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black,
+                                  color: primaryColor,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Search bike model or plate number...',
                                   hintStyle: TextStyle(
-                                    color: isDark ? Colors.white24 : Colors.black26,
+                                    color: primaryColor.withOpacity(0.24),
                                     fontWeight: FontWeight.normal,
                                   ),
-                                  prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : Colors.black38, size: 28),
-                                  suffixIcon: _isSearching
-                                      ? const Padding(
-                                          padding: EdgeInsets.all(12.0),
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00C853)),
-                                          ),
+                                  prefixIcon: Icon(Icons.search_rounded,
+                                      color: primaryColor.withOpacity(0.38), size: 28),
+                                  suffixIcon: _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: Icon(Icons.clear, color: primaryColor),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                          },
                                         )
-                                      : (_searchController.text.isNotEmpty 
-                                          ? IconButton(
-                                              icon: Icon(Icons.clear, color: isDark ? Colors.white : Colors.black),
-                                              onPressed: () {
-                                                _searchController.clear();
-                                                _onSearchChanged('');
-                                              },
-                                            )
-                                          : null),
+                                      : null,
                                   border: InputBorder.none,
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ),
                             ),
                           ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            reverseDuration: const Duration(milliseconds: 250),
-                            switchInCurve: Curves.easeOutQuart,
-                            switchOutCurve: Curves.easeInQuad,
-                            transitionBuilder: (Widget child, Animation<double> animation) {
-                              return SizeTransition(
-                                sizeFactor: animation,
-                                axisAlignment: -1.0,
-                                child: FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: ((_showManufacturers || _focusNode.hasFocus) && !_isSearching)
-                                ? _buildManufacturerDialog(isDark)
-                                : const SizedBox.shrink(key: ValueKey('dialog_hidden')),
-                          ),
-                          const SizedBox(height: 30),
-                          Text(
-                            'Quick Actions',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 35),
+                          _buildSectionHeader('SMART MAINTENANCE', isDark),
+                          const SizedBox(height: 12),
                           Row(
                             children: [
-                              Expanded(child: _buildQuickAction(isDark, 'Scan Plate', FontAwesomeIcons.camera)),
-                              const SizedBox(width: 15),
-                              Expanded(child: _buildQuickAction(isDark, 'History', FontAwesomeIcons.clockRotateLeft)),
-                              const SizedBox(width: 15),
-                              Expanded(child: _buildQuickAction(isDark, 'Stats', FontAwesomeIcons.chartLine)),
+                              _buildMaintenanceButton(
+                                'Book Service',
+                                Icons.build_rounded,
+                                isDark,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const BookServiceScreen()),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              _buildMaintenanceButton(
+                                'Oil Guide',
+                                Icons.oil_barrel_rounded,
+                                isDark,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const OilGuideScreen()),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              _buildMaintenanceButton(
+                                'Documents',
+                                Icons.description_rounded,
+                                isDark,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const DocumentsScreen()),
+                                ),
+                              ),
                             ],
                           ),
+                          const SizedBox(height: 35),
+                          _buildSectionHeader('QUICK ACTIONS', isDark),
+                          const SizedBox(height: 15),
+                          _buildQuickActionGrid(isDark),
                           const SizedBox(height: 120),
                         ],
                       ),
@@ -235,177 +199,121 @@ class _CheckScreenState extends State<CheckScreen> {
     );
   }
 
-  Widget _buildManufacturerDialog(bool isDark) {
-    final bikeProvider = Provider.of<BikeProvider>(context);
-
-    if (bikeProvider.isLoading) {
-      return Container(
-        key: const ValueKey('dialog_loading'),
-        margin: const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF121212) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? Colors.white : Colors.black,
-            width: 4.0,
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0, top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black12,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        child: const Center(child: CircularProgressIndicator(color: Color(0xFF00C853))),
-      );
-    }
-
-    return Container(
-      key: const ValueKey('dialog_content'),
-      margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 320, minHeight: 180),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF121212) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.white : Colors.black,
-          width: 4.0,
-        ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
+          ),
+        ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-              child: Text(
-                'Choose Your Model',
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
+    );
+  }
+
+  Widget _buildMaintenanceButton(String label, IconData icon, bool isDark,
+      {VoidCallback? onTap}) {
+    final primaryColor = isDark ? Colors.white : Colors.black;
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            Flexible(
-              child: Scrollbar(
-                thumbVisibility: true,
-                child: _searchController.text.isEmpty 
-                  ? ListView.builder(
-                      shrinkWrap: true,
-                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                      padding: EdgeInsets.zero,
-                      itemCount: bikeProvider.manufacturers.length,
-                      itemBuilder: (context, index) {
-                        final company = bikeProvider.manufacturers[index];
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            dividerColor: Colors.transparent,
-                            expansionTileTheme: ExpansionTileThemeData(
-                              backgroundColor: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
-                            ),
-                          ),
-                          child: ExpansionTile(
-                            key: Key('${company.id}_${company.isExpanded}'),
-                            initiallyExpanded: company.isExpanded,
-                            onExpansionChanged: (expanded) {
-                              setState(() {
-                                for (var m in bikeProvider.manufacturers) {
-                                  m.isExpanded = (m.id == company.id) ? expanded : false;
-                                }
-                              });
-                            },
-                            iconColor: isDark ? Colors.white : Colors.black,
-                            collapsedIconColor: isDark ? Colors.white54 : Colors.black54,
-                            title: Text(
-                              company.name,
-                              style: TextStyle(
-                                color: isDark ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            children: company.bikes.map((bike) => ListTile(
-                              leading: Icon(
-                                bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
-                                color: isDark ? Colors.white54 : Colors.black54,
-                                size: 20,
-                              ),
-                              title: Text(
-                                bike.name,
-                                style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                              ),
-                              onTap: () {
-                                _searchController.text = bike.name;
-                                _focusNode.unfocus();
-                                setState(() {
-                                  _showManufacturers = false;
-                                });
-                                _handleSearch(bike.name);
-                              },
-                            )).toList(),
-                          ),
-                        );
-                      },
-                    )
-                  : _filteredBikes.isEmpty 
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.search_off_rounded, color: Colors.grey[400], size: 48),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No bikes found',
-                                style: TextStyle(
-                                  color: Colors.grey[500],
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                        padding: EdgeInsets.zero,
-                        itemCount: _filteredBikes.length,
-                        itemBuilder: (context, index) {
-                          final bike = _filteredBikes[index];
-                          return ListTile(
-                            leading: Icon(
-                              bike.isScooter ? Icons.moped_rounded : Icons.motorcycle_rounded,
-                              color: isDark ? Colors.white54 : Colors.black54,
-                            ),
-                            title: Text(
-                              bike.name,
-                              style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                            ),
-                            onTap: () {
-                              _searchController.text = bike.name;
-                              _focusNode.unfocus();
-                              setState(() {
-                                  _showManufacturers = false;
-                              });
-                              _handleSearch(bike.name);
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ),
           ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 24, color: primaryColor.withOpacity(0.8)),
+                  const SizedBox(height: 10),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: primaryColor,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildQuickAction(bool isDark, String label, IconData icon) {
+  Widget _buildQuickActionGrid(bool isDark) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.5,
+      children: [
+        _buildQuickAction(
+            isDark, 'Scan Plate', FontAwesomeIcons.camera, const Color(0xFF00C853)),
+        _buildQuickAction(
+            isDark, 'History', FontAwesomeIcons.clockRotateLeft, const Color(0xFF2196F3)),
+        _buildQuickAction(
+            isDark, 'Stats', FontAwesomeIcons.chartLine, const Color(0xFFFF9100)),
+        _buildQuickAction(isDark, 'Police Mode', Icons.policy_rounded, const Color(0xFFFF5252)),
+      ],
+    );
+  }
+
+  Widget _buildQuickAction(bool isDark, String label, IconData icon, Color color) {
     final primaryColor = isDark ? Colors.white : Colors.black;
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+
     return Container(
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.03),
+        color: cardBg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: primaryColor.withOpacity(0.05), width: 1.5),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -413,35 +321,37 @@ class _CheckScreenState extends State<CheckScreen> {
           onTap: () {
             if (label == 'Scan Plate') {
               Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ScanPlateScreen()),
-              );
+                  context, MaterialPageRoute(builder: (context) => const ScanPlateScreen()));
             } else if (label == 'History') {
               Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SoundHistoryScreen()),
-              );
+                  context, MaterialPageRoute(builder: (context) => const SoundHistoryScreen()));
             } else if (label == 'Stats') {
               Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const StatsScreen()),
-              );
+                  context, MaterialPageRoute(builder: (context) => const StatsScreen()));
             }
           },
           borderRadius: BorderRadius.circular(24),
-          child: SizedBox(
-            height: 120,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                FaIcon(icon, color: primaryColor.withOpacity(0.3), size: 30),
-                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                     color: primaryColor,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ],
@@ -452,3 +362,4 @@ class _CheckScreenState extends State<CheckScreen> {
     );
   }
 }
+

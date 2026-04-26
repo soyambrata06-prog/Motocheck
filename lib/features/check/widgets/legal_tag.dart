@@ -74,3 +74,4 @@ class _LegalTagState extends State<LegalTag> with SingleTickerProviderStateMixin
     );
   }
 }
+

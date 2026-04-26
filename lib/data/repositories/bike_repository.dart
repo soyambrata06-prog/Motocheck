@@ -6,3 +6,4 @@ class BikeRepository {
     return null;
   }
 }
+

@@ -182,7 +182,7 @@ class StatsScreen extends StatelessWidget {
   }
 
   Widget _buildChartSection(bool isDark, List<SoundTestModel> history) {
-    // Simple bar chart visualization using Containers
+
     final last7Tests = history.take(7).toList().reversed.toList();
     const maxDb = 120.0;
 
@@ -320,3 +320,4 @@ class StatsScreen extends StatelessWidget {
     );
   }
 }
+

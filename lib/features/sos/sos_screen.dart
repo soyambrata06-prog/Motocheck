@@ -690,7 +690,7 @@ class SosScreen extends StatelessWidget {
   Future<void> _launchMaps(String query) async {
     final queryEncoded = Uri.encodeComponent('$query near me');
     final googleMapsUrl = 'geo:0,0?q=$queryEncoded';
-    final httpsUrl = 'https://www.google.com/maps/search/?api=1&query=$queryEncoded';
+    final httpsUrl = 'https:
     
     try {
       if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
@@ -1323,3 +1323,4 @@ class _InteractiveTileState extends State<_InteractiveTile> {
     );
   }
 }
+
